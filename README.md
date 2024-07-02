@@ -15,5 +15,7 @@ The storage will be handled by Google Drive or any other cloud provider, to let 
 - Review system for adding songs to album, this will work by selecting timestamps from the song and adding a comment. 
 - Album management.
 - See song versions.
-- Sesrch songs.
+- Search songs.
 - Google authorization to access drive storage.
+
+see [Project for progress, and todos](https://github.com/users/Myxelium/projects/1)
