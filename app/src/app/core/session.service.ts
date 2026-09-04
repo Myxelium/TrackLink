@@ -16,25 +16,25 @@ export class SessionService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? Number(raw) : NaN;
+      const storedMemberIdText = localStorage.getItem(STORAGE_KEY);
+      const parsedMemberId = storedMemberIdText ? Number(storedMemberIdText) : NaN;
 
-      this.memberId.set(Number.isFinite(parsed) ? parsed : null);
+      this.memberId.set(Number.isFinite(parsedMemberId) ? parsedMemberId : null);
     }
   }
 
-  setMemberId(id: number | null) {
-    this.memberId.set(id);
+  setMemberId(memberIdValue: number | null) {
+    this.memberId.set(memberIdValue);
 
     if (!isPlatformBrowser(this.platformId)) {
       return;
     }
 
-    if (id === null) {
+    if (memberIdValue === null) {
       localStorage.removeItem(STORAGE_KEY);
       return;
     }
 
-    localStorage.setItem(STORAGE_KEY, String(id));
+    localStorage.setItem(STORAGE_KEY, String(memberIdValue));
   }
 }

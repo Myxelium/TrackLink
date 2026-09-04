@@ -9,18 +9,18 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class TrackLinkApi {
-  private readonly http = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
 
   listMembers() {
-    return this.http.get<MemberSummary[]>('/api/members');
+    return this.httpClient.get<MemberSummary[]>('/api/members');
   }
 
-  getMember(id: number) {
-    return this.http.get<Member>(`/api/members/${id}`);
+  getMember(memberId: number) {
+    return this.httpClient.get<Member>(`/api/members/${memberId}`);
   }
 
   listBandSongs(bandId: number) {
-    return this.http.get<Song[]>(`/api/bands/${bandId}/songs`);
+    return this.httpClient.get<Song[]>(`/api/bands/${bandId}/songs`);
   }
 
   songAudioUrl(songId: number) {
@@ -28,6 +28,6 @@ export class TrackLinkApi {
   }
 
   googleStatus() {
-    return this.http.get<GoogleStatus>('/api/auth/google/status');
+    return this.httpClient.get<GoogleStatus>('/api/auth/google/status');
   }
 }

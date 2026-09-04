@@ -16,13 +16,13 @@
         <span>Session member</span>
 
         <select (ngModelChange)="onMemberChange($event)" [ngModel]="selectedMemberId()">
-          @for (item of members(); track item.id) {
+          @for (item of availableMembers(); track item.id) {
             <option [value]="item.id">{{ item.fullname || item.username }}</option>
           }
         </select>
       </label>
 
-      @if (member(); as current) {
+      @if (currentMember(); as current) {
         <dl class="facts">
           <div>
             <dt>Username</dt>
@@ -75,10 +75,10 @@
       }
 
       <ul class="takes">
-        @for (song of songs(); track song.id) {
+        @for (song of bandSongs(); track song.id) {
           <li>
             <button
-              (click)="play(song)"
+              (click)="playTheSong(song)"
               class="take"
               type="button"
             >
@@ -110,7 +110,7 @@
 
       <p class="drive">{{ driveStatus() }}</p>
 
-      @if (google()?.configured && !google()?.connected) {
+      @if (googleDriveStatus()?.configured && !googleDriveStatus()?.connected) {
         <a [href]="googleLoginHref()">Connect Google Drive</a>
       }
     </div>

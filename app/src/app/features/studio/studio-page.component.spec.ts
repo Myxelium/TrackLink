@@ -17,21 +17,21 @@ describe('StudioPageComponent', () => {
   });
 
   it('loads member information and band songs on the first page', () => {
-    const fixture = TestBed.createComponent(StudioPageComponent);
-    const http = TestBed.inject(HttpTestingController);
+    const componentFixture = TestBed.createComponent(StudioPageComponent);
+    const httpTestingController = TestBed.inject(HttpTestingController);
 
-    fixture.detectChanges();
+    componentFixture.detectChanges();
 
-    const members: MemberSummary[] = [{ id: 1, userIdentifier: 'u', username: 'ada', fullname: 'Ada Vale', image: null }];
+    const memberSummaryList: MemberSummary[] = [{ id: 1, userIdentifier: 'u', username: 'ada', fullname: 'Ada Vale', image: null }];
 
-    http.expectOne('/api/members').flush(members);
-    http.expectOne('/api/auth/google/status').flush({
+    httpTestingController.expectOne('/api/members').flush(memberSummaryList);
+    httpTestingController.expectOne('/api/auth/google/status').flush({
       configured: false,
       connected: false,
       email: null
     });
 
-    const member: Member = {
+    const loadedMember: Member = {
       id: 1,
       userIdentifier: 'u',
       username: 'ada',
@@ -41,9 +41,9 @@ describe('StudioPageComponent', () => {
       roles: [{ id: 3, roleName: 'Producer', bandId: 9 }]
     };
 
-    http.expectOne('/api/members/1').flush(member);
+    httpTestingController.expectOne('/api/members/1').flush(loadedMember);
 
-    const songs: Song[] = [
+    const loadedSongs: Song[] = [
       {
         id: 4,
         name: 'Night Shift',
@@ -55,15 +55,15 @@ describe('StudioPageComponent', () => {
       }
     ];
 
-    http.expectOne('/api/bands/9/songs').flush(songs);
-    fixture.detectChanges();
+    httpTestingController.expectOne('/api/bands/9/songs').flush(loadedSongs);
+    componentFixture.detectChanges();
 
-    const el = fixture.nativeElement as HTMLElement;
+    const renderedRoot = componentFixture.nativeElement as HTMLElement;
 
-    expect(el.textContent).toContain('Ada Vale');
-    expect(el.textContent).toContain('Kindred');
-    expect(el.textContent).toContain('Night Shift');
-    expect(el.textContent).toContain('Producer');
-    http.verify();
+    expect(renderedRoot.textContent).toContain('Ada Vale');
+    expect(renderedRoot.textContent).toContain('Kindred');
+    expect(renderedRoot.textContent).toContain('Night Shift');
+    expect(renderedRoot.textContent).toContain('Producer');
+    httpTestingController.verify();
   });
 });

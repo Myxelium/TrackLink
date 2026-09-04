@@ -8,4 +8,4 @@ const serverConfig: ApplicationConfig = {
   providers: [provideServerRendering(), provideServerRouting(serverRoutes)]
 };
 
-export const config = mergeApplicationConfig(appConfig, serverConfig);
+export const mergedServerConfig = mergeApplicationConfig(appConfig, serverConfig);

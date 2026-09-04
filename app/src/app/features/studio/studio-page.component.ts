@@ -5,6 +5,11 @@ import {
   signal
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import {
+  EMPTY,
+  catchError,
+  tap
+} from 'rxjs';
 import { TrackLinkApi } from '../../core/tracklink-api.service';
 import { SessionService } from '../../core/session.service';
 import {
@@ -21,55 +26,65 @@ import {
   styleUrl: './studio-page.component.scss'
 })
 export class StudioPageComponent implements OnInit {
-  private readonly api = inject(TrackLinkApi);
-  private readonly session = inject(SessionService);
+  private readonly trackLinkApi = inject(TrackLinkApi);
+  private readonly memberSession = inject(SessionService);
 
-  readonly members = signal<MemberSummary[]>([]);
-  readonly member = signal<Member | null>(null);
-  readonly songs = signal<Song[]>([]);
-  readonly google = signal<GoogleStatus | null>(null);
+  readonly availableMembers = signal<MemberSummary[]>([]);
+  readonly currentMember = signal<Member | null>(null);
+  readonly bandSongs = signal<Song[]>([]);
+  readonly googleDriveStatus = signal<GoogleStatus | null>(null);
   readonly loadError = signal<string | null>(null);
   readonly playingId = signal<number | null>(null);
   readonly selectedMemberId = signal<number | null>(null);
 
   ngOnInit() {
-    this.api.listMembers().subscribe({
-      next: (members) => {
-        this.members.set(members);
-        const stored = this.session.memberId();
-        const fallback = members[0]?.id ?? null;
-        const chosen = stored && members.some((item) => item.id === stored) ? stored : fallback;
+    this.trackLinkApi.listMembers().pipe(
+      tap((loadedMemberList) => {
+        this.availableMembers.set(loadedMemberList);
+        const storedMemberId = this.memberSession.memberId();
+        const fallbackMemberId = loadedMemberList[0]?.id ?? null;
+        const chosenMemberId = storedMemberId && loadedMemberList.some(
+          (memberSummary) => memberSummary.id === storedMemberId
+        ) ? storedMemberId : fallbackMemberId;
 
-        this.selectedMemberId.set(chosen);
+        this.selectedMemberId.set(chosenMemberId);
 
-        if (chosen !== null) {
-          this.session.setMemberId(chosen);
-          this.loadMember(chosen);
+        if (chosenMemberId !== null) {
+          this.memberSession.setMemberId(chosenMemberId);
+          this.loadMember(chosenMemberId);
         }
-      },
-      error: () => this.loadError.set('Could not reach the TrackLink API. Start the API on port 5180.')
-    });
+      }),
+      catchError(() => {
+        this.loadError.set('Could not reach the TrackLink API. Start the API on port 5180.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
 
-    this.api.googleStatus().subscribe({
-      next: (status) => this.google.set(status),
-      error: () => this.google.set({ configured: false, connected: false, email: null })
-    });
+    this.trackLinkApi.googleStatus().pipe(
+      tap((currentDriveStatus) => this.googleDriveStatus.set(currentDriveStatus)),
+      catchError(() => {
+        this.googleDriveStatus.set({ configured: false, connected: false, email: null });
+        return EMPTY;
+      })
+    )
+      .subscribe();
   }
 
   onMemberChange(rawId: string) {
-    const id = Number(rawId);
+    const parsedMemberId = Number(rawId);
 
-    this.selectedMemberId.set(id);
-    this.session.setMemberId(id);
-    this.loadMember(id);
+    this.selectedMemberId.set(parsedMemberId);
+    this.memberSession.setMemberId(parsedMemberId);
+    this.loadMember(parsedMemberId);
   }
 
-  play(song: Song) {
-    this.playingId.set(song.id);
+  playTheSong(selectedSong: Song) {
+    this.playingId.set(selectedSong.id);
   }
 
   audioUrl(songId: number) {
-    return this.api.songAudioUrl(songId);
+    return this.trackLinkApi.songAudioUrl(songId);
   }
 
   googleLoginHref() {
@@ -77,41 +92,49 @@ export class StudioPageComponent implements OnInit {
   }
 
   driveStatus() {
-    const status = this.google();
+    const currentDriveStatus = this.googleDriveStatus();
 
-    if (!status) {
+    if (!currentDriveStatus) {
       return '';
     }
 
-    if (status.configured && status.connected) {
-      return status.email ? `Drive connected as ${status.email}.` : 'Drive connected.';
+    if (currentDriveStatus.configured && currentDriveStatus.connected) {
+      return currentDriveStatus.email ? `Drive connected as ${currentDriveStatus.email}.` : 'Drive connected.';
     }
 
-    if (status.configured) {
+    if (currentDriveStatus.configured) {
       return 'Connect Google Drive to play files stored there.';
     }
 
     return 'Drive OAuth needs Google client credentials on the API.';
   }
 
-  private loadMember(id: number) {
+  private loadMember(memberId: number) {
     this.loadError.set(null);
-    this.api.getMember(id).subscribe({
-      next: (member) => {
-        this.member.set(member);
-        const bandId = member.bands[0]?.id;
+    this.trackLinkApi.getMember(memberId).pipe(
+      tap((loadedMember) => {
+        this.currentMember.set(loadedMember);
+        const bandId = loadedMember.bands[0]?.id;
 
         if (!bandId) {
-          this.songs.set([]);
+          this.bandSongs.set([]);
           return;
         }
 
-        this.api.listBandSongs(bandId).subscribe({
-          next: (songs) => this.songs.set(songs),
-          error: () => this.loadError.set('Could not load this band\'s songs.')
-        });
-      },
-      error: () => this.loadError.set('Could not load member information.')
-    });
+        this.trackLinkApi.listBandSongs(bandId).pipe(
+          tap((loadedSongs) => this.bandSongs.set(loadedSongs)),
+          catchError(() => {
+            this.loadError.set('Could not load this band\'s songs.');
+            return EMPTY;
+          })
+        )
+          .subscribe();
+      }),
+      catchError(() => {
+        this.loadError.set('Could not load member information.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
   }
 }
