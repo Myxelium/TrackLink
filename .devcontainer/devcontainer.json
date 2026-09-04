@@ -1,0 +1,45 @@
+{
+  "name": "TrackLink",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "remoteUser": "node",
+  "forwardPorts": [4200, 4000, 9876],
+  "portsAttributes": {
+    "4200": {
+      "label": "Angular dev server",
+      "onAutoForward": "notify"
+    },
+    "4000": {
+      "label": "Angular SSR",
+      "onAutoForward": "notify"
+    },
+    "9876": {
+      "label": "Karma",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "runArgs": ["--init", "--shm-size=1g"],
+  "mounts": [
+    "source=tracklink-npm-cache,target=/home/node/.npm,type=volume"
+  ],
+  "containerEnv": {
+    "NG_CLI_ANALYTICS": "false"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "typescript.tsdk": "app/node_modules/typescript/lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true
+      }
+    }
+  }
+}
