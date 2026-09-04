@@ -2,6 +2,12 @@ FROM mcr.microsoft.com/devcontainers/javascript-node:22-bookworm
 
 # Node 22 LTS matches Angular 19.2.x (^18.19.1 || ^20.11.1 || ^22.0.0).
 # Git is already in the base image.
+# .NET 9 SDK matches api/api.csproj TargetFramework (net9.0).
+
+ENV DOTNET_ROOT=/usr/share/dotnet \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=1 \
+    NUGET_XMLDOC_MODE=skip
 
 RUN apt-get update \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -10,6 +16,7 @@ RUN apt-get update \
         chromium \
         curl \
         fonts-liberation \
+        libicu72 \
         wget \
     && mkdir -p -m 755 /etc/apt/keyrings \
     && wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg \
@@ -19,6 +26,11 @@ RUN apt-get update \
         > /etc/apt/sources.list.d/github-cli.list \
     && apt-get update \
     && apt-get -y install --no-install-recommends gh \
+    && curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && bash /tmp/dotnet-install.sh --channel 9.0 --install-dir "${DOTNET_ROOT}" \
+    && ln -sf "${DOTNET_ROOT}/dotnet" /usr/local/bin/dotnet \
+    && rm /tmp/dotnet-install.sh \
+    && dotnet --list-sdks \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 

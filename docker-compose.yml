@@ -1,13 +1,19 @@
-version: "3.2"
 services:
   sql-server-db:
     container_name: sql-server-db
-    image: mcr.microsoft.com/mssql/server
+    image: mcr.microsoft.com/mssql/server:2022-latest
     ports:
       - "1433:1433"
     environment:
-      SA_PASSWORD: "VerySecretPassword!"
       ACCEPT_EULA: "Y"
+      SA_PASSWORD: "VerySecretPassword!"
+      MSSQL_SA_PASSWORD: "VerySecretPassword!"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'true <> /dev/tcp/127.0.0.1/1433'"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
   api:
     image: api
     build:

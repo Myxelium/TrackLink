@@ -1,12 +1,11 @@
 {
   "name": "TrackLink",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
-  },
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+  "service": "devcontainer",
+  "runServices": ["sql-server-db"],
+  "workspaceFolder": "/workspaces/TrackLink",
   "remoteUser": "node",
-  "forwardPorts": [4200, 4000, 9876],
+  "forwardPorts": [4200, 4000, 9876, 5180, 1433],
   "portsAttributes": {
     "4200": {
       "label": "Angular dev server",
@@ -19,22 +18,37 @@
     "9876": {
       "label": "Karma",
       "onAutoForward": "silent"
+    },
+    "5180": {
+      "label": "ASP.NET API",
+      "onAutoForward": "notify"
+    },
+    "1433": {
+      "label": "SQL Server",
+      "onAutoForward": "silent"
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-  "runArgs": ["--init", "--shm-size=1g"],
+  "postStartCommand": "bash .devcontainer/post-start.sh",
   "mounts": [
-    "source=tracklink-npm-cache,target=/home/node/.npm,type=volume"
+    "source=tracklink-npm-cache,target=/home/node/.npm,type=volume",
+    "source=tracklink-nuget-cache,target=/home/node/.nuget,type=volume"
   ],
   "containerEnv": {
-    "NG_CLI_ANALYTICS": "false"
+    "NG_CLI_ANALYTICS": "false",
+    "DOTNET_ROOT": "/usr/share/dotnet",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "ASPNETCORE_URLS": "http://0.0.0.0:5180",
+    "ConnectionStrings__Database": "Server=sql-server-db,1433;Database=usico;User Id=sa;Password=VerySecretPassword!;Trusted_Connection=False;TrustServerCertificate=True;"
   },
   "customizations": {
     "vscode": {
       "extensions": [
         "angular.ng-template",
         "dbaeumer.vscode-eslint",
-        "EditorConfig.EditorConfig"
+        "EditorConfig.EditorConfig",
+        "ms-dotnettools.csharp"
       ],
       "settings": {
         "typescript.tsdk": "app/node_modules/typescript/lib",
