@@ -18,6 +18,8 @@ namespace api.Data
 
         public virtual DbSet<BandMember> BandMembers { get; set; }
 
+        public virtual DbSet<GoogleAccount> GoogleAccounts { get; set; }
+
         public virtual DbSet<Member> Members { get; set; }
 
         public virtual DbSet<MemberRole> MemberRoles { get; set; }
@@ -37,15 +39,15 @@ namespace api.Data
                 entity.ToTable("Band");
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-                
+
                 entity.Property(e => e.Genre)
                     .HasMaxLength(50)
                     .IsUnicode(false);
-                
+
                 entity.Property(e => e.Image)
                     .HasMaxLength(100)
                     .IsUnicode(false);
-                
+
                 entity.Property(e => e.Name)
                     .HasMaxLength(50)
                     .IsUnicode(false);
@@ -53,21 +55,32 @@ namespace api.Data
 
             modelBuilder.Entity<BandMember>(entity =>
             {
-                entity
-                    .HasNoKey()
-                    .ToTable("BandMember");
+                entity.ToTable("BandMember");
+
+                entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
-                entity.HasOne(d => d.Member).WithMany()
-                    .HasForeignKey(d => d.MemberId)
+                entity.HasOne(d => d.Band)
+                    .WithMany(p => p.BandMembers)
+                    .HasForeignKey(d => d.BandId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BandMember_Band");
 
-                entity.HasOne(d => d.MemberNavigation).WithMany()
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.BandMembers)
                     .HasForeignKey(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BandMember_Member");
+            });
+
+            modelBuilder.Entity<GoogleAccount>(entity =>
+            {
+                entity.ToTable("GoogleAccount");
+
+                entity.Property(e => e.Email).HasMaxLength(320);
+                entity.Property(e => e.AccessToken).HasMaxLength(4000);
+                entity.Property(e => e.RefreshToken).HasMaxLength(4000);
             });
 
             modelBuilder.Entity<Member>(entity =>
@@ -79,11 +92,11 @@ namespace api.Data
                 entity.Property(e => e.Fullname)
                     .HasMaxLength(50)
                     .IsUnicode(false);
-                
+
                 entity.Property(e => e.Image)
                     .HasMaxLength(100)
                     .IsUnicode(false);
-                
+
                 entity.Property(e => e.Username)
                     .HasMaxLength(50)
                     .IsUnicode(false);
@@ -93,15 +106,17 @@ namespace api.Data
             {
                 entity.ToTable("MemberRole");
 
-                entity.HasOne(d => d.Member).WithMany(p => p.MemberRoles)
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.MemberRoles)
                     .HasForeignKey(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_MemberRole_Member");
 
-                entity.HasOne(d => d.Role).WithMany(p => p.InverseRole)
+                entity.HasOne(d => d.Role)
+                    .WithMany(p => p.MemberRoles)
                     .HasForeignKey(d => d.RoleId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_MemberRole_MemberRole");
+                    .HasConstraintName("FK_MemberRole_Role");
             });
 
             modelBuilder.Entity<Role>(entity =>
@@ -109,17 +124,19 @@ namespace api.Data
                 entity.ToTable("Role");
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
-                
+
                 entity.Property(e => e.RoleDescription).HasMaxLength(150);
-                
+
                 entity.Property(e => e.RoleName).HasMaxLength(50);
 
-                entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.Roles)
+                entity.HasOne(d => d.CreatedByNavigation)
+                    .WithMany(p => p.Roles)
                     .HasForeignKey(d => d.CreatedBy)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Role_Member");
 
-                entity.HasOne(d => d.CreatedForNavigation).WithMany(p => p.Roles)
+                entity.HasOne(d => d.CreatedForNavigation)
+                    .WithMany(p => p.Roles)
                     .HasForeignKey(d => d.CreatedFor)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Role_Band");
@@ -130,20 +147,36 @@ namespace api.Data
                 entity.ToTable("Song");
 
                 entity.Property(e => e.Description).HasMaxLength(500);
-                
+
                 entity.Property(e => e.Name).HasMaxLength(50);
-                
+
                 entity.Property(e => e.Url)
-                    .HasMaxLength(100)
+                    .HasMaxLength(2000)
                     .HasColumnName("URL");
 
-                entity.HasOne(d => d.UploadedByNavigation).WithMany(p => p.Songs)
+                entity.HasOne(d => d.UploadedByNavigation)
+                    .WithMany(p => p.Songs)
                     .HasForeignKey(d => d.UploadedBy)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Song_Member");
             });
 
-            modelBuilder.Entity<SongIdentifier>(entity => { entity.ToTable("SongIdentifier"); });
+            modelBuilder.Entity<SongIdentifier>(entity =>
+            {
+                entity.ToTable("SongIdentifier");
+
+                entity.HasOne(d => d.Band)
+                    .WithMany(p => p.SongIdentifiers)
+                    .HasForeignKey(d => d.BandId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_SongIdentifier_Band");
+
+                entity.HasOne(d => d.Song)
+                    .WithMany(p => p.SongIdentifiers)
+                    .HasForeignKey(d => d.SongId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_SongIdentifier_Song");
+            });
 
             modelBuilder.Entity<Vote>(entity =>
             {
@@ -152,15 +185,17 @@ namespace api.Data
                 entity.ToTable("Vote");
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
-                
+
                 entity.Property(e => e.Comment).HasMaxLength(50);
 
-                entity.HasOne(d => d.Member).WithMany(p => p.Votes)
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.Votes)
                     .HasForeignKey(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Vote_Member");
 
-                entity.HasOne(d => d.Song).WithMany(p => p.Votes)
+                entity.HasOne(d => d.Song)
+                    .WithMany(p => p.Votes)
                     .HasForeignKey(d => d.SongId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Vote_Song");

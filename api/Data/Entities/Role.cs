@@ -17,5 +17,7 @@
         public virtual Member CreatedByNavigation { get; set; } = null!;
 
         public virtual Band CreatedForNavigation { get; set; } = null!;
+
+        public virtual ICollection<MemberRole> MemberRoles { get; set; } = new List<MemberRole>();
     }
 }

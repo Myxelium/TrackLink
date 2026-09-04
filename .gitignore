@@ -1,3 +1,7 @@
-﻿api/bin
-api/obj
-api/Properties
+﻿api/bin/
+api/obj/
+*.user
+app/node_modules/
+app/dist/
+app/.angular/
+app/coverage/

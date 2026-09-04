@@ -1,0 +1,118 @@
+<div class="grain" aria-hidden="true"></div>
+
+<div class="frame">
+  <header class="island">
+    <p class="eyebrow">Remote album desk</p>
+    <a class="mark" href="/">TrackLink</a>
+    <p class="lede">Metadata here. Masters stay in the cloud.</p>
+  </header>
+
+  <section class="board">
+    <article class="plate member-plate">
+      <p class="kicker">Member</p>
+      <h1>Who is in the room</h1>
+
+      <label class="field">
+        <span>Session member</span>
+
+        <select (ngModelChange)="onMemberChange($event)" [ngModel]="selectedMemberId()">
+          @for (item of members(); track item.id) {
+            <option [value]="item.id">{{ item.fullname || item.username }}</option>
+          }
+        </select>
+      </label>
+
+      @if (member(); as current) {
+        <dl class="facts">
+          <div>
+            <dt>Username</dt>
+            <dd>{{ current.username }}</dd>
+          </div>
+
+          <div>
+            <dt>Full name</dt>
+            <dd>{{ current.fullname || 'Not set' }}</dd>
+          </div>
+
+          <div>
+            <dt>Bands</dt>
+
+            <dd>
+              @if (current.bands.length === 0) {
+                  None yet
+                } @else {
+                  @for (band of current.bands; track band.id) {
+                    <span class="chip">{{ band.name }}</span>
+                  }
+                }
+            </dd>
+          </div>
+
+          <div>
+            <dt>Roles</dt>
+
+            <dd>
+              @if (current.roles.length === 0) {
+                  None yet
+                } @else {
+                  @for (role of current.roles; track role.id) {
+                    <span class="chip">{{ role.roleName }}</span>
+                  }
+                }
+            </dd>
+          </div>
+        </dl>
+      }
+    </article>
+
+    <article class="plate song-plate">
+      <p class="kicker">Catalog</p>
+      <h2>Band songs</h2>
+      <p class="hint">Playback goes through the API by song id so Drive tokens stay off the page.</p>
+
+      @if (loadError(); as message) {
+        <p class="banner" role="alert">{{ message }}</p>
+      }
+
+      <ul class="takes">
+        @for (song of songs(); track song.id) {
+          <li>
+            <button
+              (click)="play(song)"
+              class="take"
+              type="button"
+            >
+              <span class="take-name">{{ song.name }}</span>
+              <span class="take-meta">v{{ song.version || 1 }} · {{ song.storageKind }}</span>
+            </button>
+          </li>
+          } @empty {
+            <li class="empty">No songs on this band yet.</li>
+          }
+      </ul>
+    </article>
+  </section>
+
+  <footer class="deck">
+    <div class="deck-core">
+      @if (playingId(); as id) {
+        <p class="now">Now playing take {{ id }}</p>
+
+        <audio
+          [src]="audioUrl(id)"
+          autoplay
+          controls
+        >
+        </audio>
+      } @else {
+        <p class="now">Pick a take to hear it.</p>
+      }
+
+      <p class="drive">{{ driveStatus() }}</p>
+
+      @if (google()?.configured && !google()?.connected) {
+        <a [href]="googleLoginHref()">Connect Google Drive</a>
+      }
+    </div>
+  </footer>
+</div>

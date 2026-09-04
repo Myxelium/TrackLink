@@ -56,21 +56,55 @@ namespace api.Data.Migrations
 
             modelBuilder.Entity("api.Data.Entities.BandMember", b =>
                 {
-                    b.Property<int>("BandId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("BandId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MemberId")
                         .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BandId");
 
                     b.HasIndex("MemberId");
 
                     b.ToTable("BandMember", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.GoogleAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GoogleAccount", (string)null);
                 });
 
             modelBuilder.Entity("api.Data.Entities.Member", b =>
@@ -189,8 +223,8 @@ namespace api.Data.Migrations
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
                         .HasColumnName("URL");
 
                     b.Property<int?>("Version")
@@ -218,6 +252,10 @@ namespace api.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BandId");
+
+                    b.HasIndex("SongId");
 
                     b.ToTable("SongIdentifier", (string)null);
                 });
@@ -251,21 +289,21 @@ namespace api.Data.Migrations
 
             modelBuilder.Entity("api.Data.Entities.BandMember", b =>
                 {
-                    b.HasOne("api.Data.Entities.Band", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("BandMembers")
+                        .HasForeignKey("BandId")
                         .IsRequired()
                         .HasConstraintName("FK_BandMember_Band");
 
-                    b.HasOne("api.Data.Entities.Member", "MemberNavigation")
-                        .WithMany()
+                    b.HasOne("api.Data.Entities.Member", "Member")
+                        .WithMany("BandMembers")
                         .HasForeignKey("MemberId")
                         .IsRequired()
                         .HasConstraintName("FK_BandMember_Member");
 
-                    b.Navigation("Member");
+                    b.Navigation("Band");
 
-                    b.Navigation("MemberNavigation");
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("api.Data.Entities.MemberRole", b =>
@@ -276,11 +314,11 @@ namespace api.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_MemberRole_Member");
 
-                    b.HasOne("api.Data.Entities.MemberRole", "Role")
-                        .WithMany("InverseRole")
+                    b.HasOne("api.Data.Entities.Role", "Role")
+                        .WithMany("MemberRoles")
                         .HasForeignKey("RoleId")
                         .IsRequired()
-                        .HasConstraintName("FK_MemberRole_MemberRole");
+                        .HasConstraintName("FK_MemberRole_Role");
 
                     b.Navigation("Member");
 
@@ -317,6 +355,25 @@ namespace api.Data.Migrations
                     b.Navigation("UploadedByNavigation");
                 });
 
+            modelBuilder.Entity("api.Data.Entities.SongIdentifier", b =>
+                {
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("SongIdentifiers")
+                        .HasForeignKey("BandId")
+                        .IsRequired()
+                        .HasConstraintName("FK_SongIdentifier_Band");
+
+                    b.HasOne("api.Data.Entities.Song", "Song")
+                        .WithMany("SongIdentifiers")
+                        .HasForeignKey("SongId")
+                        .IsRequired()
+                        .HasConstraintName("FK_SongIdentifier_Song");
+
+                    b.Navigation("Band");
+
+                    b.Navigation("Song");
+                });
+
             modelBuilder.Entity("api.Data.Entities.Vote", b =>
                 {
                     b.HasOne("api.Data.Entities.Member", "Member")
@@ -338,11 +395,17 @@ namespace api.Data.Migrations
 
             modelBuilder.Entity("api.Data.Entities.Band", b =>
                 {
+                    b.Navigation("BandMembers");
+
                     b.Navigation("Roles");
+
+                    b.Navigation("SongIdentifiers");
                 });
 
             modelBuilder.Entity("api.Data.Entities.Member", b =>
                 {
+                    b.Navigation("BandMembers");
+
                     b.Navigation("MemberRoles");
 
                     b.Navigation("Roles");
@@ -352,13 +415,15 @@ namespace api.Data.Migrations
                     b.Navigation("Votes");
                 });
 
-            modelBuilder.Entity("api.Data.Entities.MemberRole", b =>
+            modelBuilder.Entity("api.Data.Entities.Role", b =>
                 {
-                    b.Navigation("InverseRole");
+                    b.Navigation("MemberRoles");
                 });
 
             modelBuilder.Entity("api.Data.Entities.Song", b =>
                 {
+                    b.Navigation("SongIdentifiers");
+
                     b.Navigation("Votes");
                 });
 #pragma warning restore 612, 618

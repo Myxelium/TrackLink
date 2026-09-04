@@ -18,6 +18,8 @@
 
         public virtual Member UploadedByNavigation { get; set; } = null!;
 
+        public virtual ICollection<SongIdentifier> SongIdentifiers { get; set; } = new List<SongIdentifier>();
+
         public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
     }
 }

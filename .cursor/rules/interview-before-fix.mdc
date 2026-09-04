@@ -1,0 +1,20 @@
+---
+description: Interview the user before implementing fixes; no guessing
+alwaysApply: true
+---
+
+# Interview before implement
+
+Before writing or changing product code for a bug/feature ask:
+
+1. Read the ask. Do **not** start a large codebase rewrite yet.
+2. Reply with a **short interview** (bullets only):
+   - What you think the bug/goal is (1–2 sentences)
+   - What’s missing / unclear
+   - Choices (A/B/C) with a **recommended** default
+   - Proposed scope (files/areas you will touch; what you will not)
+   - How you will prove done
+3. **Stop and wait** for the user’s answers. Do not implement until they approve or choose.
+4. Then implement exactly what they chose — no silent extra scope.
+
+Skip the interview only when the user says e.g. “just fix it”, “no interview”, or the handoff already records approved Next steps/decisions and they said continue.

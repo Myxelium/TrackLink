@@ -12,6 +12,8 @@
 
         public string? Image { get; set; }
 
+        public virtual ICollection<BandMember> BandMembers { get; set; } = new List<BandMember>();
+
         public virtual ICollection<MemberRole> MemberRoles { get; set; } = new List<MemberRole>();
 
         public virtual ICollection<Role> Roles { get; set; } = new List<Role>();

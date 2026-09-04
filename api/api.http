@@ -1,6 +1,29 @@
 @api_HostAddress = http://localhost:5180
 
-GET {{api_HostAddress}}/weatherforecast/
+GET {{api_HostAddress}}/api/health
 Accept: application/json
 
 ###
+
+GET {{api_HostAddress}}/api/members
+Accept: application/json
+
+###
+
+GET {{api_HostAddress}}/api/members/1
+Accept: application/json
+
+###
+
+GET {{api_HostAddress}}/api/bands/1/songs
+Accept: application/json
+
+###
+
+GET {{api_HostAddress}}/api/songs/1/audio
+Accept: audio/*
+
+###
+
+GET {{api_HostAddress}}/api/auth/google/status
+Accept: application/json

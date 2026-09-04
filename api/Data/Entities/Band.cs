@@ -12,6 +12,10 @@
 
         public DateTime CreatedDate { get; set; }
 
+        public virtual ICollection<BandMember> BandMembers { get; set; } = new List<BandMember>();
+
         public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+
+        public virtual ICollection<SongIdentifier> SongIdentifiers { get; set; } = new List<SongIdentifier>();
     }
 }

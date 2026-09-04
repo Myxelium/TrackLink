@@ -8,8 +8,8 @@
 
         public int MemberId { get; set; }
 
-        public virtual Band Member { get; set; } = null!;
+        public virtual Band Band { get; set; } = null!;
 
-        public virtual Member MemberNavigation { get; set; } = null!;
+        public virtual Member Member { get; set; } = null!;
     }
 }

@@ -7,5 +7,9 @@
         public int BandId { get; set; }
 
         public int SongId { get; set; }
+
+        public virtual Band Band { get; set; } = null!;
+
+        public virtual Song Song { get; set; } = null!;
     }
 }
