@@ -18,6 +18,8 @@ namespace api.Data
 
         public virtual DbSet<BandMember> BandMembers { get; set; }
 
+        public virtual DbSet<BandInvite> BandInvites { get; set; }
+
         public virtual DbSet<GoogleAccount> GoogleAccounts { get; set; }
 
         public virtual DbSet<Member> Members { get; set; }
@@ -31,6 +33,16 @@ namespace api.Data
         public virtual DbSet<SongIdentifier> SongIdentifiers { get; set; }
 
         public virtual DbSet<Vote> Votes { get; set; }
+
+        public virtual DbSet<Album> Albums { get; set; }
+
+        public virtual DbSet<AlbumTrack> AlbumTracks { get; set; }
+
+        public virtual DbSet<AlbumProposal> AlbumProposals { get; set; }
+
+        public virtual DbSet<AlbumProposalDecision> AlbumProposalDecisions { get; set; }
+
+        public virtual DbSet<AlbumProposalReview> AlbumProposalReviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +63,19 @@ namespace api.Data
                 entity.Property(e => e.Name)
                     .HasMaxLength(50)
                     .IsUnicode(false);
+
+                entity.Property(e => e.DriveFolderId)
+                    .HasMaxLength(128)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.DriveFolderName)
+                    .HasMaxLength(200);
+
+                entity.HasOne(d => d.OwnerMember)
+                    .WithMany(p => p.OwnedBands)
+                    .HasForeignKey(d => d.OwnerMemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Band_OwnerMember");
             });
 
             modelBuilder.Entity<BandMember>(entity =>
@@ -72,15 +97,61 @@ namespace api.Data
                     .HasForeignKey(d => d.MemberId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BandMember_Member");
+
+                entity.Property(e => e.RoleName)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasDefaultValue("member");
+            });
+
+            modelBuilder.Entity<BandInvite>(entity =>
+            {
+                entity.ToTable("BandInvite");
+
+                entity.HasIndex(e => e.Code).IsUnique();
+
+                entity.Property(e => e.Email)
+                    .HasMaxLength(320)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Code)
+                    .HasMaxLength(32)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.RoleName)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+                entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
+                entity.Property(e => e.AcceptedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Band)
+                    .WithMany(p => p.BandInvites)
+                    .HasForeignKey(d => d.BandId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BandInvite_Band");
+
+                entity.HasOne(d => d.CreatedByNavigation)
+                    .WithMany(p => p.CreatedInvites)
+                    .HasForeignKey(d => d.CreatedBy)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_BandInvite_Member");
             });
 
             modelBuilder.Entity<GoogleAccount>(entity =>
             {
                 entity.ToTable("GoogleAccount");
-
+                entity.HasIndex(e => e.MemberId).IsUnique();
                 entity.Property(e => e.Email).HasMaxLength(320);
                 entity.Property(e => e.AccessToken).HasMaxLength(4000);
                 entity.Property(e => e.RefreshToken).HasMaxLength(4000);
+
+                entity.HasOne(d => d.Member)
+                    .WithOne(p => p.GoogleAccount)
+                    .HasForeignKey<GoogleAccount>(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_GoogleAccount_Member");
             });
 
             modelBuilder.Entity<Member>(entity =>
@@ -94,8 +165,20 @@ namespace api.Data
                     .IsUnicode(false);
 
                 entity.Property(e => e.Image)
-                    .HasMaxLength(100)
+                    .HasMaxLength(500)
                     .IsUnicode(false);
+
+                entity.Property(e => e.Email)
+                    .HasMaxLength(320)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.GoogleSubject)
+                    .HasMaxLength(128)
+                    .IsUnicode(false);
+
+                entity.HasIndex(e => e.Email);
+
+                entity.HasIndex(e => e.GoogleSubject);
 
                 entity.Property(e => e.Username)
                     .HasMaxLength(50)
@@ -199,6 +282,144 @@ namespace api.Data
                     .HasForeignKey(d => d.SongId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Vote_Song");
+            });
+
+            modelBuilder.Entity<Album>(entity =>
+            {
+                entity.ToTable("Album");
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ApprovalRule)
+                    .HasMaxLength(20)
+                    .IsUnicode(false)
+                    .HasDefaultValue("all");
+
+                entity.Property(e => e.ArtDriveFileId)
+                    .HasMaxLength(128)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Band)
+                    .WithMany(p => p.Albums)
+                    .HasForeignKey(d => d.BandId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Album_Band");
+
+                entity.HasOne(d => d.CreatedByNavigation)
+                    .WithMany(p => p.CreatedAlbums)
+                    .HasForeignKey(d => d.CreatedBy)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Album_Member");
+            });
+
+            modelBuilder.Entity<AlbumTrack>(entity =>
+            {
+                entity.ToTable("AlbumTrack");
+
+                entity.HasIndex(e => new { e.AlbumId, e.SongId }).IsUnique();
+
+                entity.Property(e => e.AddedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Album)
+                    .WithMany(p => p.Tracks)
+                    .HasForeignKey(d => d.AlbumId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumTrack_Album");
+
+                entity.HasOne(d => d.Song)
+                    .WithMany(p => p.AlbumTracks)
+                    .HasForeignKey(d => d.SongId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumTrack_Song");
+
+                entity.HasOne(d => d.Proposal)
+                    .WithMany()
+                    .HasForeignKey(d => d.ProposalId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumTrack_Proposal");
+            });
+
+            modelBuilder.Entity<AlbumProposal>(entity =>
+            {
+                entity.ToTable("AlbumProposal");
+
+                entity.Property(e => e.Status)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+                entity.Property(e => e.ResolvedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Album)
+                    .WithMany(p => p.Proposals)
+                    .HasForeignKey(d => d.AlbumId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposal_Album");
+
+                entity.HasOne(d => d.Song)
+                    .WithMany(p => p.AlbumProposals)
+                    .HasForeignKey(d => d.SongId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposal_Song");
+
+                entity.HasOne(d => d.ProposedByNavigation)
+                    .WithMany(p => p.AlbumProposals)
+                    .HasForeignKey(d => d.ProposedBy)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposal_Member");
+            });
+
+            modelBuilder.Entity<AlbumProposalDecision>(entity =>
+            {
+                entity.ToTable("AlbumProposalDecision");
+
+                entity.HasIndex(e => new { e.ProposalId, e.MemberId }).IsUnique();
+
+                entity.Property(e => e.Decision)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Proposal)
+                    .WithMany(p => p.Decisions)
+                    .HasForeignKey(d => d.ProposalId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposalDecision_Proposal");
+
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.AlbumProposalDecisions)
+                    .HasForeignKey(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposalDecision_Member");
+            });
+
+            modelBuilder.Entity<AlbumProposalReview>(entity =>
+            {
+                entity.ToTable("AlbumProposalReview");
+
+                entity.HasIndex(e => e.ProposalId);
+
+                entity.Property(e => e.Body)
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+
+                entity.HasOne(d => d.Proposal)
+                    .WithMany(p => p.Reviews)
+                    .HasForeignKey(d => d.ProposalId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposalReview_Proposal");
+
+                entity.HasOne(d => d.Member)
+                    .WithMany(p => p.AlbumProposalReviews)
+                    .HasForeignKey(d => d.MemberId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlbumProposalReview_Member");
             });
 
             OnModelCreatingPartial(modelBuilder);

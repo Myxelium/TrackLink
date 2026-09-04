@@ -6,62 +6,61 @@
 
 ## Goal
 
-Prove Google Drive playback end-to-end, and make local unpublished JunoLint resolve inside the Dev Container (and CI if you touch workflows).
+Finish remaining musico board stories after the Google-session foundation. Album desk, timestamped reviews, and the master-detail Albums layout are in. Next: leftover Drive catalog, then votes, versions, search.
 
 ## Completed
 
-- Musico board UI/API stories except Google Drive + OAuth (those are coded, not proven)
-- Studio first page: member picker, member info, band songs, HTML5 player via `/api/songs/{id}/audio`
-- APIs: `GET /api/members`, `GET /api/members/{id}`, `GET /api/bands/{id}/songs`, `GET /api/songs/{id}/audio` (Range 206)
-- Agent/rules layout (metoyou-shaped): `AGENTS.md`, `agents-docs/`, `.cursor/rules/`
-- Dev Container at repo root: Node 22, Angular CLI, .NET 9 SDK, SQL Server 2022 (`sql-server-db`), ports 4200/4000/9876/5180/1433
-- Unpublished JunoLint `file:../../JunoLint` (`/mnt/Kindred_ext4/repos/JunoLint`). Extra README-off rules on `**/*.ts`: `prefer-sentence-names`, `prefer-sentence-function-names` (`warn`, `minLength: 0`), `decompose-complex-expressions` (`warn`, `threshold: 5`). `cd app && npm run lint` is clean. Dropped leading-`the` names so `no-leading-the` passes.
+- Drive OAuth, Google = TrackLink session, folder sandbox, invites
+- Album catalogs + propose/approve (`all` / `owner_uploaders`)
+- Timestamped reviews (`startMs`/`endMs` + comment; click seeks transport)
+- Reviews allowed after approval so a solo owner can still comment
+- Solo-owner **Put on album** FK fix: admit via `Proposal` navigation, not `ProposalId = 0`
+- Albums layout **A**: slim list left, album/PR workspace right
 
 ## Changed files
 
-- `api/` members, songs audio, Google OAuth/Drive scaffolding
-- `app/` studio UI, `eslint.config.js`, `package.json` junolint path
-- `.devcontainer/` Node + .NET 9 + compose SQL
-- `AGENTS.md`, `agents-docs/`, `.cursor/rules/`
+- `api/` albums, proposals, reviews, migration `20260904194500_ProposalReviews`
+- `api.Tests/AlbumDeskTests.cs`
+- `app/src/app/features/studio/` album desk/work, deck seek, page layout
+- Feature docs: `albums.md`, `proposals.md`
 
 ## Decisions
 
-- `Song.Url` is `https://...` or `gdrive:{fileId}` (ADR-0002)
-- One Google account per API process for v1 (not per member)
-- API is `net9.0`
-- JunoLint stays unpublished/local until you publish; names must be multi-word **and** must not start with the word `the`
+- Any band member can comment; author or owner can delete
+- Mark start/end from the transport playhead (no waveform)
+- Approved proposals stay commentable; withdrawn does not
+- Layout A (not single-column or three-pane)
+- Stale Drive catalog A/B/C **not chosen**
 
 ## Failed approaches
 
-- Draft issue bodies on the GitHub project were not readable without login; titles + status only
-- IDE browser MCP was down; studio page checked via `ng serve` + `/api` proxy, not click-through
-- Host had no Chrome for Karma; Chromium is in the Dev Container
-- Dev Container does not see sibling `/mnt/Kindred_ext4/repos/JunoLint`, so `file:../../JunoLint` breaks inside the container until bind-mounted
+- `@else if (x(); as y)` is invalid Angular — nest `@if` in `@else`
+- `new Component()` with `input()` throws NG0203
+- `ProposalId = proposal.Id` before insert fails `FK_AlbumTrack_Proposal` (InMemory hides it)
+- Browser MCP often down in this environment
 
 ## Current issue
 
-1. `Google__ClientId` / `Google__ClientSecret` empty → `GET /api/auth/google/status` is `configured: false`; login is 503
-2. Dev Container (and GitHub `npm ci`) cannot resolve the sibling JunoLint path
+Takes still lists Drive files from the old full-Drive scan. Propose of those can be `outside_folder`; the studio catch-all says “must already be on this band.” Votes, versions (date/MD5), and search are not built.
 
 ## Next steps
 
-1. Bind-mount JunoLint in `.devcontainer/devcontainer.json` so `app/`'s `../../JunoLint` is `/workspaces/JunoLint` (or pack/publish junolint for CI)
-2. Create a Google Cloud OAuth web client, Drive API on, redirect `http://localhost:5180/api/auth/google/callback`
-3. Set `Google__ClientId` and `Google__ClientSecret` (user secrets ok)
-4. Open `/api/auth/google/login`, confirm status `connected: true`
-5. Set a song `Url` to `gdrive:{fileId}` and play `/api/songs/{id}/audio`
+1. Manual: Sign in on `:4200`, Albums rail — confirm slim list + workspace, Put on album, review seek
+2. Leftover Drive takes: **A** hide out-of-folder, **B** unlink, **C** fix error text only
+3. Votes, versions, search
 
 ## Commands
 
 ```bash
-# host
-./start-database.sh
-dotnet run --project api --urls http://localhost:5180
-cd app && npm start
+export PATH="$HOME/.dotnet:$HOME/.local/bin:$PATH"
+export DOTNET_ROOT="$HOME/.dotnet"
+export NG_ALLOWED_HOSTS="localhost,127.0.0.1"
 
-# Dev Container (after rebuild)
-dotnet run --project api --urls http://0.0.0.0:5180
-npm --prefix app start -- --host 0.0.0.0
-
-cd app && npm run lint
+curl -s http://localhost:5180/api/health
+# Sign in: http://localhost:4200/
+# Albums is the third studio rail button
 ```
+
+## Local JunoLint (do not redo)
+
+`app/` uses `file:../../JunoLint` (`/mnt/Kindred_ext4/repos/JunoLint`). Dev Container must bind-mount that sibling. Do not disable the sentence-name rules; rename when touching those files.

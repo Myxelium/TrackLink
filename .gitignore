@@ -1,5 +1,7 @@
 ﻿api/bin/
 api/obj/
+api.Tests/bin/
+api.Tests/obj/
 *.user
 app/node_modules/
 app/dist/

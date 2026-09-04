@@ -32,6 +32,21 @@ Songs are metadata rows (name, version, storage pointer). Audio bytes are not st
 [{ "id": 1, "name": "Demo Take", "description": "...", "url": "https://...", "version": 1, "previousVersion": 0, "uploadedBy": 1 }]
 ```
 
+### Link a Drive file
+
+- **Method:** POST
+- **Path:** `/api/bands/{bandId}/songs`
+- **Authentication:** Session cookie; owner or uploader. File must sit under the band Drive folder.
+- **Notes:** Stores `gdrive:{driveFileId}` on `Song.Url`. Does not copy bytes into SQL Server.
+
+```json
+{ "driveFileId": "1abc", "name": "bottleneck.mp3" }
+```
+
+```json
+{ "id": 7, "name": "bottleneck.mp3", "description": "Linked from Google Drive", "uploadedBy": 1, "version": 1, "previousVersion": 0, "storageKind": "gdrive" }
+```
+
 ### Play by id
 
 - **Method:** GET

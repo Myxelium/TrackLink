@@ -11,4 +11,6 @@ public class GoogleOptions
     public string RedirectUri { get; set; } = "http://localhost:5180/api/auth/google/callback";
 
     public string AppReturnUrl { get; set; } = "http://localhost:4200/";
+
+    public string ApiKey { get; set; } = "";
 }

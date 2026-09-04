@@ -18,8 +18,12 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 builder.Services.AddSingleton<IStartupFilter, MigrateDatabaseStartupFilter>();
 builder.Services.AddSingleton<IStartupFilter, SeedDataStartupFilter>();
 builder.Services.Configure<GoogleOptions>(builder.Configuration.GetSection(GoogleOptions.SectionName));
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
+builder.Services.AddDataProtection();
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IAudioPlaybackService, AudioPlaybackService>();
+builder.Services.AddScoped<IMemberSession, MemberSession>();
+builder.Services.AddScoped<IInviteMailer, InviteMailer>();
 builder.Services.AddHttpClient("audio", client =>
 {
     client.Timeout = TimeSpan.FromMinutes(2);
@@ -29,7 +33,8 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
         policy.WithOrigins("http://localhost:4200")
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 var app = builder.Build();

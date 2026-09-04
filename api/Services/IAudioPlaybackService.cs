@@ -3,6 +3,8 @@ namespace api.Services;
 public interface IAudioPlaybackService
 {
     Task<AudioOpenResult?> OpenAsync(int songId, CancellationToken cancellationToken);
+
+    Task<AudioOpenResult?> OpenAsync(int songId, int? memberId, CancellationToken cancellationToken);
 }
 
 public sealed class AudioOpenResult : IDisposable

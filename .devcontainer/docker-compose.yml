@@ -20,6 +20,8 @@ services:
       - sql-server-db
     volumes:
       - .:/workspaces/TrackLink:cached
+      # app/ depends on file:../../JunoLint → /workspaces/JunoLint
+      - ../JunoLint:/workspaces/JunoLint:cached
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://0.0.0.0:5180

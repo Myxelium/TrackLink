@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ ! -f /workspaces/JunoLint/package.json ]]; then
+  echo "ERROR: /workspaces/JunoLint/package.json is missing."
+  echo "app/ depends on file:../../JunoLint (resolves to /workspaces/JunoLint)."
+  echo "Rebuild the Dev Container so the JunoLint bind-mount is applied."
+  echo "Host sibling must exist next to TrackLink (e.g. ../JunoLint)."
+  exit 1
+fi
+
 if [[ -f app/package.json ]]; then
   echo "Installing npm dependencies in app/..."
   npm --prefix app install

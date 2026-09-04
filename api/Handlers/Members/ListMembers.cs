@@ -16,7 +16,7 @@ public static class ListMembers
             return await db.Members
                 .AsNoTracking()
                 .OrderBy(m => m.Username)
-                .Select(m => new MemberSummaryDto(m.Id, m.UserIdentifier, m.Username, m.Fullname, m.Image))
+                .Select(m => new MemberSummaryDto(m.Id, m.UserIdentifier, m.Username, m.Fullname, m.Image, m.Email))
                 .ToListAsync(cancellationToken);
         }
     }

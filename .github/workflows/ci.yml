@@ -13,6 +13,20 @@ jobs:
         working-directory: app
     steps:
       - uses: actions/checkout@v4
+      - name: Place JunoLint at ../../JunoLint
+        run: |
+          dest="${GITHUB_WORKSPACE}/../JunoLint"
+          if git clone --depth 1 --branch v1.4.0 https://github.com/Myxelium/JunoLint.git "$dest"; then
+            echo "Cloned Myxelium/JunoLint@v1.4.0"
+          else
+            echo "GitHub clone failed; packing junolint@1.4.0 from npm"
+            tmp="$(mktemp -d)"
+            (cd "$tmp" && npm pack junolint@1.4.0)
+            mkdir -p "$dest"
+            tar -xzf "$tmp"/junolint-1.4.0.tgz -C "$dest" --strip-components=1
+          fi
+          test -f "$dest/package.json"
+          python3 -c "import os; p=os.path.normpath(os.path.join('${GITHUB_WORKSPACE}','app','../../JunoLint')); print('app file:../../JunoLint ->', p); raise SystemExit(0 if os.path.isfile(os.path.join(p,'package.json')) else 1)"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -29,4 +43,4 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      - run: dotnet build api/api.csproj --configuration Release
+      - run: dotnet test api.Tests/api.Tests.csproj --configuration Release --nologo

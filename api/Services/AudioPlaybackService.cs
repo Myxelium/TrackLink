@@ -13,8 +13,13 @@ public class AudioPlaybackService(
 
     public async Task<AudioOpenResult?> OpenAsync(int songId, CancellationToken cancellationToken)
     {
+        return await OpenAsync(songId, null, cancellationToken);
+    }
+
+    public async Task<AudioOpenResult?> OpenAsync(int songId, int? memberId, CancellationToken cancellationToken)
+    {
         var song = await db.Songs.AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == songId, cancellationToken);
+            .FirstOrDefaultAsync(catalogSong => catalogSong.Id == songId, cancellationToken);
         if (song is null || string.IsNullOrWhiteSpace(song.Url))
         {
             return null;
@@ -22,8 +27,39 @@ public class AudioPlaybackService(
 
         if (song.Url.StartsWith(DrivePrefix, StringComparison.OrdinalIgnoreCase))
         {
+            if (memberId is null)
+            {
+                return null;
+            }
+
             var fileId = song.Url[DrivePrefix.Length..];
-            var drive = await googleDrive.DownloadAsync(fileId, cancellationToken);
+            var band = await db.SongIdentifiers.AsNoTracking()
+                .Where(identifier => identifier.SongId == songId)
+                .Select(identifier => identifier.Band)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (band?.DriveFolderId is null)
+            {
+                return null;
+            }
+
+            var inBand = await db.BandMembers.AsNoTracking().AnyAsync(
+                bandMember => bandMember.BandId == band.Id && bandMember.MemberId == memberId,
+                cancellationToken);
+            if (!inBand)
+            {
+                return null;
+            }
+
+            if (!await googleDrive.IsFileInsideFolderAsync(
+                    memberId.Value,
+                    fileId,
+                    band.DriveFolderId,
+                    cancellationToken))
+            {
+                return null;
+            }
+
+            var drive = await googleDrive.DownloadAsync(memberId.Value, fileId, cancellationToken);
             if (drive is null)
             {
                 return null;

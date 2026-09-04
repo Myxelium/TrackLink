@@ -1,0 +1,61 @@
+<div class="workspace">
+  <header class="chrome">
+    <a class="mark" href="/">TrackLink</a>
+    <p class="band">Join a band</p>
+    <a class="session" routerLink="/">Studio</a>
+  </header>
+
+  <div class="body">
+    <main class="surface join-surface">
+      <section class="pane is-current">
+        <header class="pane-head">
+          <h1>Accept invite</h1>
+          <p>Email plus the code from your invite</p>
+        </header>
+
+        @if (notice(); as message) {
+          <p class="banner" role="alert">{{ message }}</p>
+        }
+
+        @if (!accepted()) {
+          <form (ngSubmit)="acceptInvite()" class="join-form">
+            <label>
+              <span>Email</span>
+
+              <input
+                [(ngModel)]="email"
+                autocomplete="email"
+                name="email"
+                required
+                type="email"
+              >
+            </label>
+
+            <label>
+              <span>Invite code</span>
+
+              <input
+                [(ngModel)]="code"
+                autocomplete="one-time-code"
+                name="code"
+                required
+                type="text"
+              >
+            </label>
+
+            <p class="empty">If you are not signed in, Google login comes next. Use the same email.</p>
+
+            <div class="join-actions">
+              <button class="text-action" type="submit">Accept invite</button>
+              <a [href]="googleLoginHref()">Sign in with Google first</a>
+            </div>
+          </form>
+        } @else {
+          <p class="empty">
+            <a routerLink="/">Open the studio</a>
+          </p>
+        }
+      </section>
+    </main>
+  </div>
+</div>

@@ -1,3 +1,3 @@
 # Identity
 
-Browser session for the **current member**. Persistence is `localStorage` key `tracklink.memberId`, sent as context for later Drive-per-member work. The first page uses it to load `GET /api/members/{id}`.
+Google login creates the TrackLink member. The browser session is cookie `tracklink.sid` (HttpOnly), read through `GET /api/auth/me`. There is no member picker.

@@ -1,5 +1,6 @@
 using api.Data;
 using api.Data.Entities;
+using api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace api;
@@ -52,9 +53,10 @@ public class SeedDataStartupFilter(IConfiguration configuration) : IStartupFilte
         db.Bands.Add(band);
         db.SaveChanges();
 
+        band.OwnerMemberId = ada.Id;
         db.BandMembers.AddRange(
-            new BandMember { BandId = band.Id, MemberId = ada.Id },
-            new BandMember { BandId = band.Id, MemberId = kit.Id });
+            new BandMember { BandId = band.Id, MemberId = ada.Id, RoleName = BandRoles.Owner },
+            new BandMember { BandId = band.Id, MemberId = kit.Id, RoleName = BandRoles.Member });
 
         db.Roles.Add(new Role
         {

@@ -5,12 +5,12 @@ namespace api.Controllers;
 
 [ApiController]
 [Route("api/songs")]
-public class SongController(IAudioPlaybackService audio) : ControllerBase
+public class SongController(IAudioPlaybackService audio, IMemberSession memberSession) : ControllerBase
 {
     [HttpGet("{id:int}/audio")]
     public async Task<IActionResult> Play(int id, CancellationToken cancellationToken)
     {
-        var opened = await audio.OpenAsync(id, cancellationToken);
+        var opened = await audio.OpenAsync(id, memberSession.GetMemberId(HttpContext), cancellationToken);
         if (opened is null)
         {
             return NotFound();

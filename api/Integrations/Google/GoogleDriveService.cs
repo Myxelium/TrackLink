@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using api.Contracts;
 using api.Data;
 using api.Data.Entities;
+using api.Services;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Requests;
@@ -19,34 +20,27 @@ public class GoogleDriveService(
     IOptions<GoogleOptions> options,
     ILogger<GoogleDriveService> logger) : IGoogleDriveService
 {
+    private const string FolderMime = "application/vnd.google-apps.folder";
+
     private static readonly string[] Scopes =
     [
         DriveService.Scope.DriveReadonly,
         "openid",
-        "email"
+        "email",
+        "profile"
     ];
 
     public bool IsConfigured
     {
         get
         {
-            var o = options.Value;
-            return !string.IsNullOrWhiteSpace(o.ClientId) && !string.IsNullOrWhiteSpace(o.ClientSecret);
+            var configured = options.Value;
+            return !string.IsNullOrWhiteSpace(configured.ClientId) &&
+                   !string.IsNullOrWhiteSpace(configured.ClientSecret);
         }
     }
 
-    public async Task<GoogleStatusDto> GetStatusAsync(CancellationToken cancellationToken)
-    {
-        if (!IsConfigured)
-        {
-            return new GoogleStatusDto(false, false, null);
-        }
-
-        var account = await db.GoogleAccounts.AsNoTracking().OrderBy(a => a.Id).FirstOrDefaultAsync(cancellationToken);
-        return new GoogleStatusDto(true, account is not null, account?.Email);
-    }
-
-    public Task<string?> CreateAuthorizationUrlAsync(CancellationToken cancellationToken)
+    public Task<string?> CreateAuthorizationUrlAsync(string? state, CancellationToken cancellationToken)
     {
         if (!IsConfigured)
         {
@@ -56,14 +50,19 @@ public class GoogleDriveService(
         var flow = CreateFlow();
         var request = (GoogleAuthorizationCodeRequestUrl)flow.CreateAuthorizationCodeRequest(options.Value.RedirectUri);
         request.AccessType = "offline";
+        if (!string.IsNullOrWhiteSpace(state))
+        {
+            request.State = state;
+        }
+
         return Task.FromResult<string?>(request.Build().AbsoluteUri);
     }
 
-    public async Task<bool> HandleCallbackAsync(string code, CancellationToken cancellationToken)
+    public async Task<GoogleLoginProfile?> ExchangeCodeAsync(string code, CancellationToken cancellationToken)
     {
         if (!IsConfigured)
         {
-            return false;
+            return null;
         }
 
         var flow = CreateFlow();
@@ -75,55 +74,229 @@ public class GoogleDriveService(
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Google OAuth code exchange failed");
-            return false;
+            return null;
         }
 
-        if (string.IsNullOrWhiteSpace(token.RefreshToken) && string.IsNullOrWhiteSpace(token.AccessToken))
+        if (string.IsNullOrWhiteSpace(token.AccessToken))
         {
-            return false;
+            return null;
         }
 
-        var email = await TryReadEmailAsync(token.AccessToken, cancellationToken);
-        var existing = await db.GoogleAccounts.OrderBy(a => a.Id).FirstOrDefaultAsync(cancellationToken);
-        if (existing is null)
+        var info = await TryReadUserInfoAsync(token.AccessToken, cancellationToken);
+        return new GoogleLoginProfile
         {
-            existing = new GoogleAccount();
-            db.GoogleAccounts.Add(existing);
-        }
-
-        existing.AccessToken = token.AccessToken ?? existing.AccessToken;
-        if (!string.IsNullOrWhiteSpace(token.RefreshToken))
-        {
-            existing.RefreshToken = token.RefreshToken;
-        }
-
-        existing.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds ?? 3500);
-        existing.Email = email ?? existing.Email;
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
+            AccessToken = token.AccessToken,
+            RefreshToken = token.RefreshToken,
+            ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(token.ExpiresInSeconds ?? 3500),
+            Email = info?.Email,
+            Subject = info?.Id,
+            Name = info?.Name,
+            Picture = info?.Picture
+        };
     }
 
-    public async Task<IReadOnlyList<DriveFileDto>> ListAudioFilesAsync(CancellationToken cancellationToken)
+    public async Task SaveTokensAsync(int memberId, GoogleLoginProfile profile, CancellationToken cancellationToken)
     {
-        var service = await CreateDriveServiceAsync(cancellationToken);
+        var account = await db.GoogleAccounts.FirstOrDefaultAsync(
+            googleAccount => googleAccount.MemberId == memberId,
+            cancellationToken);
+        if (account is null)
+        {
+            account = new GoogleAccount { MemberId = memberId };
+            db.GoogleAccounts.Add(account);
+        }
+
+        account.AccessToken = profile.AccessToken;
+        if (!string.IsNullOrWhiteSpace(profile.RefreshToken))
+        {
+            account.RefreshToken = profile.RefreshToken;
+        }
+        else if (string.IsNullOrWhiteSpace(account.RefreshToken))
+        {
+            account.RefreshToken = profile.AccessToken;
+        }
+
+        account.ExpiresAt = profile.ExpiresAt;
+        account.Email = profile.Email ?? account.Email;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<bool> HasTokensAsync(int memberId, CancellationToken cancellationToken)
+    {
+        return await db.GoogleAccounts.AsNoTracking().AnyAsync(
+            googleAccount => googleAccount.MemberId == memberId && googleAccount.RefreshToken != "",
+            cancellationToken);
+    }
+
+    public async Task<string?> GetEmailAsync(int memberId, CancellationToken cancellationToken)
+    {
+        return await db.GoogleAccounts.AsNoTracking()
+            .Where(googleAccount => googleAccount.MemberId == memberId)
+            .Select(googleAccount => googleAccount.Email)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetAccessTokenAsync(int memberId, CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        if (service is null)
+        {
+            return null;
+        }
+
+        var account = await db.GoogleAccounts.AsNoTracking()
+            .FirstOrDefaultAsync(googleAccount => googleAccount.MemberId == memberId, cancellationToken);
+        return account?.AccessToken;
+    }
+
+    public async Task<IReadOnlyList<DriveFileDto>> ListAudioFilesAsync(
+        int memberId,
+        string folderId,
+        CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
         if (service is null)
         {
             return [];
         }
 
-        var request = service.Files.List();
-        request.Q = "mimeType contains 'audio/' and trashed = false";
-        request.Fields = "files(id, name, mimeType)";
-        request.PageSize = 50;
-        var result = await request.ExecuteAsync(cancellationToken);
-        return (result.Files ?? [])
-            .Select(f => new DriveFileDto(f.Id, f.Name, f.MimeType))
-            .ToList();
+        var listed = new List<DriveFileDto>();
+        var folders = new Queue<string>();
+        var seenFolders = new HashSet<string>(StringComparer.Ordinal) { folderId };
+        folders.Enqueue(folderId);
+
+        while (folders.Count > 0 && listed.Count < 200)
+        {
+            var parentId = folders.Dequeue();
+                IList<global::Google.Apis.Drive.v3.Data.File> files;
+            try
+            {
+                var request = service.Files.List();
+                request.Q = $"'{EscapeQueryValue(parentId)}' in parents and trashed = false";
+                request.Fields = "files(id, name, mimeType)";
+                request.PageSize = 100;
+                request.SupportsAllDrives = true;
+                request.IncludeItemsFromAllDrives = true;
+                var result = await request.ExecuteAsync(cancellationToken);
+                files = result.Files ?? [];
+            }
+            catch (Exception ex)
+            {
+                logger.LogInformation(ex, "Drive list denied or failed under {FolderId}", parentId);
+                if (parentId == folderId)
+                {
+                    throw new DriveFolderDeniedException();
+                }
+
+                continue;
+            }
+
+            foreach (var file in files)
+            {
+                if (string.IsNullOrWhiteSpace(file.Id))
+                {
+                    continue;
+                }
+
+                if (string.Equals(file.MimeType, FolderMime, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (seenFolders.Add(file.Id))
+                    {
+                        folders.Enqueue(file.Id);
+                    }
+
+                    continue;
+                }
+
+                if (file.MimeType is not null &&
+                    file.MimeType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+                {
+                    listed.Add(new DriveFileDto(file.Id, file.Name ?? "audio", file.MimeType));
+                }
+            }
+        }
+
+        return listed;
     }
 
-    public async Task<DriveDownload?> DownloadAsync(string fileId, CancellationToken cancellationToken)
+    public async Task<bool> CanReadFolderAsync(int memberId, string folderId, CancellationToken cancellationToken)
     {
-        var service = await CreateDriveServiceAsync(cancellationToken);
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        if (service is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var request = service.Files.Get(folderId);
+            request.Fields = "id, mimeType";
+            request.SupportsAllDrives = true;
+            var file = await request.ExecuteAsync(cancellationToken);
+            return file is not null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> IsFileInsideFolderAsync(
+        int memberId,
+        string fileId,
+        string folderId,
+        CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        if (service is null)
+        {
+            return false;
+        }
+
+        var parentsById = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var current = fileId;
+        for (var depth = 0; depth < 32; depth++)
+        {
+            if (string.Equals(current, folderId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            global::Google.Apis.Drive.v3.Data.File meta;
+            try
+            {
+                var request = service.Files.Get(current);
+                request.Fields = "id, parents";
+                request.SupportsAllDrives = true;
+                meta = await request.ExecuteAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogInformation(ex, "Drive parent walk failed for {FileId}", current);
+                return false;
+            }
+
+            var parents = (meta.Parents ?? []).ToList();
+            parentsById[current] = parents;
+            if (DriveFolderScope.IsInsideRoot(fileId, folderId, parentsById))
+            {
+                return true;
+            }
+
+            if (parents.Count == 0)
+            {
+                return false;
+            }
+
+            current = parents[0];
+        }
+
+        return false;
+    }
+
+    public async Task<DriveDownload?> DownloadAsync(int memberId, string fileId, CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
         if (service is null)
         {
             return null;
@@ -131,7 +304,9 @@ public class GoogleDriveService(
 
         try
         {
-            var meta = await service.Files.Get(fileId).ExecuteAsync(cancellationToken);
+            var metaRequest = service.Files.Get(fileId);
+            metaRequest.SupportsAllDrives = true;
+            var meta = await metaRequest.ExecuteAsync(cancellationToken);
             var stream = new MemoryStream();
             await service.Files.Get(fileId).DownloadAsync(stream, cancellationToken);
             stream.Position = 0;
@@ -150,27 +325,29 @@ public class GoogleDriveService(
 
     private GoogleAuthorizationCodeFlow CreateFlow()
     {
-        var o = options.Value;
+        var configured = options.Value;
         return new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
         {
             ClientSecrets = new ClientSecrets
             {
-                ClientId = o.ClientId,
-                ClientSecret = o.ClientSecret
+                ClientId = configured.ClientId,
+                ClientSecret = configured.ClientSecret
             },
             Scopes = Scopes,
             Prompt = "consent"
         });
     }
 
-    private async Task<DriveService?> CreateDriveServiceAsync(CancellationToken cancellationToken)
+    private async Task<DriveService?> CreateDriveServiceAsync(int memberId, CancellationToken cancellationToken)
     {
         if (!IsConfigured)
         {
             return null;
         }
 
-        var account = await db.GoogleAccounts.OrderBy(a => a.Id).FirstOrDefaultAsync(cancellationToken);
+        var account = await db.GoogleAccounts.FirstOrDefaultAsync(
+            googleAccount => googleAccount.MemberId == memberId,
+            cancellationToken);
         if (account is null || string.IsNullOrWhiteSpace(account.RefreshToken))
         {
             return null;
@@ -184,7 +361,7 @@ public class GoogleDriveService(
             ExpiresInSeconds = (long)Math.Max(0, (account.ExpiresAt - DateTimeOffset.UtcNow).TotalSeconds)
         };
 
-        var credential = new UserCredential(flow, "tracklink", token);
+        var credential = new UserCredential(flow, $"member:{memberId}", token);
         if (account.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(1))
         {
             if (!await credential.RefreshTokenAsync(cancellationToken))
@@ -209,7 +386,7 @@ public class GoogleDriveService(
         });
     }
 
-    private static async Task<string?> TryReadEmailAsync(string? accessToken, CancellationToken cancellationToken)
+    private static async Task<UserInfo?> TryReadUserInfoAsync(string? accessToken, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -227,8 +404,7 @@ public class GoogleDriveService(
                 return null;
             }
 
-            var json = await response.Content.ReadFromJsonAsync<UserInfo>(cancellationToken);
-            return json?.Email;
+            return await response.Content.ReadFromJsonAsync<UserInfo>(cancellationToken);
         }
         catch
         {
@@ -236,9 +412,25 @@ public class GoogleDriveService(
         }
     }
 
+    private static string EscapeQueryValue(string value)
+    {
+        return value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'", "\\'", StringComparison.Ordinal);
+    }
+
     private sealed class UserInfo
     {
         [JsonPropertyName("email")]
         public string? Email { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; set; }
+
+        [JsonPropertyName("picture")]
+        public string? Picture { get; set; }
     }
 }
+
+public sealed class DriveFolderDeniedException : Exception;

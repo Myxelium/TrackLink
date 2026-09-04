@@ -8,5 +8,12 @@ Tags help grepping: `rg '\\[api\\]' agents-docs/LESSONS-INDEX.md`
 
 ## Index
 
+- Do not set `ProposalId` before the proposal row exists — `[api] [albums] [ef]`
+- Do not `new` a component that uses `input()` — `[app] [angular] [tests]`
+- Seed members must not block album admission — `[api] [albums] [session]`
+- Angular `@else if (x(); as y)` is invalid — nest `@if` — `[app] [angular] [templates]`
+- `Google.Apis` is swallowed inside `api.Integrations.Google` — `[api] [csharp] [namespaces]`
+- Empty Angular `allowedHosts` rejects localhost in SSR — `[app] [ssr] [dev]`
+- User-secrets keys use colons, not env-var underscores — `[api] [oauth] [secrets]`
 - Audio playback must honor HTTP Range so the player can seek — `[api] [audio]`
 - Google Drive bytes never belong in SQL Server; store file id or URL only — `[storage] [drive]`

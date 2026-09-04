@@ -1,0 +1,63 @@
+<div class="drive-block">
+  <header class="pane-head">
+    <h2>Band folder</h2>
+    <p>{{ band().driveFolderName || 'Not set' }}</p>
+  </header>
+
+  <p class="empty">TrackLink never looks outside this folder.</p>
+
+  @if (band().isOwner) {
+    <div class="join-actions">
+      <button
+        (click)="pickFolder()"
+        class="text-action"
+        type="button"
+      >
+        {{ band().driveFolderId ? 'Change folder' : 'Pick Drive folder' }}
+      </button>
+    </div>
+
+    <form (ngSubmit)="sendInvite()" class="join-form">
+      <label>
+        <span>Invite email</span>
+
+        <input
+          (ngModelChange)="inviteEmailChange.emit($event)"
+          [ngModel]="inviteEmail()"
+          name="inviteEmail"
+          required
+          type="email"
+        >
+      </label>
+
+      <label>
+        <span>Role</span>
+
+        <select
+          (ngModelChange)="inviteRoleChange.emit($event)"
+          [ngModel]="inviteRole()"
+          name="inviteRole"
+        >
+          <option value="uploader">Uploader</option>
+          <option value="member">Member</option>
+        </select>
+      </label>
+
+      <button class="text-action" type="submit">Create invite</button>
+    </form>
+
+    @if (lastInvite(); as invite) {
+      <p class="empty">
+        Code {{ invite.code }}
+        ·
+        <a [href]="invite.acceptUrl">Invite link</a>
+
+        @if (!invite.emailSent) {
+          <span> - email was not sent; share the link or code.</span>
+        }
+      </p>
+    }
+  } @else if (!band().driveFolderId) {
+    <p class="empty">Waiting for the owner to pick the band Drive folder.</p>
+  }
+</div>
