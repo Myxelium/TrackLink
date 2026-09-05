@@ -1,0 +1,253 @@
+<div class="workspace">
+  <header class="chrome">
+    <a class="mark" href="/">TrackLink</a>
+    <p class="band">{{ currentBandName() }}</p>
+
+    <div class="session">
+      @if (currentMember(); as current) {
+        <span>{{ current.fullname || current.username }}</span>
+
+        <button
+          (click)="signOut()"
+          class="text-action"
+          type="button"
+        >Sign out</button>
+      } @else if (shouldOfferGoogleConnect()) {
+        <a [href]="googleLoginHref()">Sign in with Google</a>
+      }
+    </div>
+  </header>
+
+  <div class="body">
+    <nav aria-label="Studio tools" class="rail">
+      <button
+        (click)="showTakesPanel()"
+        [class.is-current]="focusedStudioPanel() === 'takes'"
+        class="rail-btn"
+        title="Takes"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M4 6h16M4 12h10M4 18h16"
+            stroke-linecap="round"
+            stroke-width="1.5"
+          />
+        </svg>
+      </button>
+
+      <button
+        (click)="showDrivePanel()"
+        [class.is-current]="focusedStudioPanel() === 'drive'"
+        class="rail-btn"
+        title="Drive"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M4 7h16v10H4zM8 7V5h8v2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+          />
+        </svg>
+      </button>
+
+      <button
+        (click)="showAlbumsPanel()"
+        [class.is-current]="focusedStudioPanel() === 'albums'"
+        class="rail-btn"
+        title="Albums"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"
+            stroke-linecap="round"
+            stroke-width="1.5"
+          />
+        </svg>
+      </button>
+    </nav>
+
+    <main
+      [class.album-surface]="focusedStudioPanel() === 'albums'"
+      [class.has-open]="focusedStudioPanel() === 'albums' && openAlbum() !== null"
+      class="surface"
+    >
+      @if (focusedStudioPanel() === 'albums') {
+        @if (loadError(); as message) {
+          <p class="banner album-banner" role="alert">{{ message }}</p>
+        }
+
+        <app-studio-album-desk
+          (albumChosen)="selectAlbum($event)"
+          (albumRequested)="createAlbum()"
+          (newAlbumNameChange)="newAlbumName = $event"
+          (newAlbumRuleChange)="newAlbumRule = $event"
+          [albums]="albums()"
+          [canCreate]="canManageAlbums()"
+          [newAlbumName]="newAlbumName"
+          [newAlbumRule]="newAlbumRule"
+          [selectedAlbumId]="openAlbum()?.id ?? null"
+        />
+
+        <app-studio-album-work
+          (archiveRequested)="archiveAlbum()"
+          (artFileRequested)="uploadAlbumArt($event)"
+          (artLockRequested)="lockAlbumArt($event)"
+          (artRequested)="castArtVote($event)"
+          (decisionRequested)="decideProposal($event)"
+          (deskRequested)="closeOpenAlbum()"
+          (inclusionRequested)="castInclusionVote($event)"
+          (nameRequested)="castNameVote($event)"
+          (orderLockRequested)="lockAlbumOrder($event)"
+          (orderRequested)="castOrderVote($event)"
+          (markRequested)="markReviewBound($event)"
+          (proposalChosen)="openProposalPane($event)"
+          (proposalClosed)="closeProposalPane()"
+          (proposalRequested)="proposeSong()"
+          (proposeSongIdChange)="proposeSongId = $event"
+          (reviewBodyChange)="reviewBody = $event"
+          (reviewDeleted)="deleteProposalReview($event)"
+          (reviewRequested)="addProposalReview()"
+          (reviewSeeked)="seekProposalReview($event)"
+          (ruleChangeRequested)="changeAlbumRule($event)"
+          (trackChosen)="playAlbumTrack($event)"
+          (withdrawRequested)="withdrawProposal()"
+          [album]="openAlbum()"
+          [bandSongs]="bandSongs()"
+          [canManage]="canManageAlbums()"
+          [artSizeWarning]="artSizeWarning()"
+          [artUploading]="artUploading()"
+          [driveImageFiles]="driveImageFiles()"
+          [currentMemberId]="currentMember()?.id ?? null"
+          [isOwner]="isBandOwner()"
+          [playingId]="playingId()"
+          [proposal]="openProposal()"
+          [proposeSongId]="proposeSongId"
+          [reviewBody]="reviewBody"
+          [reviewEndMs]="reviewEndMs"
+          [reviewStartMs]="reviewStartMs"
+        />
+      }
+
+      @if (focusedStudioPanel() !== 'albums') {
+        <section [class.is-current]="focusedStudioPanel() === 'takes'" class="pane takes-pane">
+          <header class="pane-head">
+            <h1>Takes</h1>
+            <p>{{ takeCountLabel() }}</p>
+          </header>
+
+          <label class="take-search">
+            <span>Search</span>
+
+            <input
+              (input)="searchTakes(takeSearchField.value)"
+              #takeSearchField
+              [value]="takeSearchQuery"
+              autocomplete="off"
+              placeholder="Name or notes"
+              type="search"
+            >
+          </label>
+
+          @if (loadError(); as message) {
+            <p class="banner" role="alert">{{ message }}</p>
+          }
+
+          <div class="sheet">
+            <div class="sheet-row sheet-head">
+              <span>Name</span>
+              <span>Ver</span>
+              <span>Store</span>
+            </div>
+
+            @for (song of listedTakes(); track song.id) {
+              <button
+                (click)="playTheSong(song)"
+                [attr.title]="song.contentMd5 || null"
+                [class.is-armed]="playingId() === song.id"
+                class="sheet-row take-row"
+                type="button"
+              >
+                <span class="take-name">
+                  <span class="take-title">{{ song.name }}</span>
+
+                  @if (sourceDateLabel(song); as sourceDate) {
+                    <span class="take-date">{{ sourceDate }}</span>
+                  }
+                </span>
+
+                <span class="mono">{{ versionLabel(song) }}</span>
+                <span class="mono">{{ song.storageKind }}</span>
+              </button>
+            } @empty {
+              <p class="empty">{{ emptyTakesLabel() }}</p>
+            }
+          </div>
+        </section>
+
+        <section [class.is-current]="focusedStudioPanel() === 'drive'" class="pane tool-pane">
+          <header class="pane-head">
+            <h2>Session</h2>
+          </header>
+
+          @if (currentMember(); as current) {
+            <app-studio-session-facts [currentMember]="current" />
+          } @else {
+            <p class="empty">Sign in with Google to become a TrackLink member and open Drive.</p>
+          }
+
+          @if (currentBand(); as currentBand) {
+            <app-studio-band-setup
+              (folderPicked)="pickBandFolder()"
+              (inviteEmailChange)="inviteEmail = $event"
+              (inviteRequested)="sendInvite()"
+              (inviteRoleChange)="inviteRole = $event"
+              [band]="currentBand"
+              [inviteEmail]="inviteEmail"
+              [inviteRole]="inviteRole"
+              [lastInvite]="lastInvite()"
+            />
+          }
+
+          @if (driveError(); as message) {
+            <p class="banner" role="alert">{{ message }}</p>
+          }
+
+          @if (googleDriveStatus()?.connected && currentBand()?.driveFolderId) {
+            <app-studio-drive-list (fileChosen)="linkAndPlayDriveFile($event)" [driveFiles]="driveFiles()" />
+          }
+        </section>
+      }
+    </main>
+  </div>
+
+  <footer class="transport">
+    <app-studio-deck
+      [armedTakeLabel]="armedTakeLabel()"
+      [driveStatusText]="driveStatus()"
+      [googleLoginHref]="googleLoginHref()"
+      [playingId]="playingId()"
+      [seekEpoch]="seekEpoch()"
+      [seekMs]="seekMs()"
+      [showConnect]="shouldOfferGoogleConnect()"
+    />
+  </footer>
+</div>

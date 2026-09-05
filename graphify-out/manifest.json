@@ -1,0 +1,584 @@
+{
+  "api/Contracts/Dtos.cs": {
+    "mtime": 1788544146.5727167,
+    "seen": 1788593364.6216493,
+    "ast_hash": "95b9bd2d48217c80d70823c27d460ae1",
+    "semantic_hash": "95b9bd2d48217c80d70823c27d460ae1"
+  },
+  "api/Controllers/AlbumController.cs": {
+    "mtime": 1788544184.7492437,
+    "seen": 1788593364.621653,
+    "ast_hash": "e8cd5198b19acfc8d08273fadbf10b34",
+    "semantic_hash": "e8cd5198b19acfc8d08273fadbf10b34"
+  },
+  "api/Controllers/BandController.cs": {
+    "mtime": 1788550443.433177,
+    "seen": 1788593364.6216543,
+    "ast_hash": "36ee54dd2ba265b6231a759965985819",
+    "semantic_hash": "36ee54dd2ba265b6231a759965985819"
+  },
+  "api/Controllers/GoogleAuthController.cs": {
+    "mtime": 1788539900.8966596,
+    "seen": 1788593364.621655,
+    "ast_hash": "5b567f62c06c8c64e49777e5c973275b",
+    "semantic_hash": "5b567f62c06c8c64e49777e5c973275b"
+  },
+  "api/Controllers/InviteController.cs": {
+    "mtime": 1788539909.9222276,
+    "seen": 1788593364.6216562,
+    "ast_hash": "889624bfba90d1675eb8326c75e36987",
+    "semantic_hash": "889624bfba90d1675eb8326c75e36987"
+  },
+  "api/Controllers/MemberController.cs": {
+    "mtime": 1788533671.2770336,
+    "seen": 1788593364.6216567,
+    "ast_hash": "da5af5bf71ce0bf674d11912b938f525",
+    "semantic_hash": "da5af5bf71ce0bf674d11912b938f525"
+  },
+  "api/Controllers/SongController.cs": {
+    "mtime": 1788539911.0248199,
+    "seen": 1788593364.6216574,
+    "ast_hash": "0795dc048306be9d152c01f83ad2c300",
+    "semantic_hash": "0795dc048306be9d152c01f83ad2c300"
+  },
+  "api/Data/DatabaseContext.cs": {
+    "mtime": 1788544342.9031873,
+    "seen": 1788593364.6216578,
+    "ast_hash": "3da739bb1b398c67cd6f3bb5ea684e0b",
+    "semantic_hash": "3da739bb1b398c67cd6f3bb5ea684e0b"
+  },
+  "api/Data/Entities/Album.cs": {
+    "mtime": 1788541821.0489545,
+    "seen": 1788593364.6216583,
+    "ast_hash": "abb9ab33027f73afe84c31eac8b2a198",
+    "semantic_hash": "abb9ab33027f73afe84c31eac8b2a198"
+  },
+  "api/Data/Entities/AlbumProposal.cs": {
+    "mtime": 1788544139.717154,
+    "seen": 1788593364.621659,
+    "ast_hash": "66de04da13ef86e962382a035026d6b3",
+    "semantic_hash": "66de04da13ef86e962382a035026d6b3"
+  },
+  "api/Data/Entities/AlbumProposalDecision.cs": {
+    "mtime": 1788541824.9632835,
+    "seen": 1788593364.6216598,
+    "ast_hash": "03b5616e06bd18ae1dfdc3cb39e1a2a5",
+    "semantic_hash": "03b5616e06bd18ae1dfdc3cb39e1a2a5"
+  },
+  "api/Data/Entities/AlbumProposalReview.cs": {
+    "mtime": 1788544139.7174382,
+    "seen": 1788593364.6216605,
+    "ast_hash": "b773215718cdebe6d94211c393fe0ac6",
+    "semantic_hash": "b773215718cdebe6d94211c393fe0ac6"
+  },
+  "api/Data/Entities/AlbumTrack.cs": {
+    "mtime": 1788541821.8475955,
+    "seen": 1788593364.621661,
+    "ast_hash": "c37a8e3eb17f9a469249e12c4ca715a8",
+    "semantic_hash": "c37a8e3eb17f9a469249e12c4ca715a8"
+  },
+  "api/Data/Entities/Band.cs": {
+    "mtime": 1788541825.6211433,
+    "seen": 1788593364.6216617,
+    "ast_hash": "50d268e6bf659ef9c16b72c1ae31cca3",
+    "semantic_hash": "50d268e6bf659ef9c16b72c1ae31cca3"
+  },
+  "api/Data/Entities/BandInvite.cs": {
+    "mtime": 1788539768.474107,
+    "seen": 1788593364.6216621,
+    "ast_hash": "d660da329fc7cebbe8606232805f0a7f",
+    "semantic_hash": "d660da329fc7cebbe8606232805f0a7f"
+  },
+  "api/Data/Entities/BandMember.cs": {
+    "mtime": 1788539771.4892304,
+    "seen": 1788593364.6216626,
+    "ast_hash": "357ebd159378dcbfc2cec4f1fb5c022d",
+    "semantic_hash": "357ebd159378dcbfc2cec4f1fb5c022d"
+  },
+  "api/Data/Entities/GoogleAccount.cs": {
+    "mtime": 1788539769.897061,
+    "seen": 1788593364.6216636,
+    "ast_hash": "0e805c17eb34f824c8e5881898028a29",
+    "semantic_hash": "0e805c17eb34f824c8e5881898028a29"
+  },
+  "api/Data/Entities/Member.cs": {
+    "mtime": 1788544140.473789,
+    "seen": 1788593364.621664,
+    "ast_hash": "b72c8dc39af458a96d9b4257b223d95c",
+    "semantic_hash": "b72c8dc39af458a96d9b4257b223d95c"
+  },
+  "api/Data/Entities/MemberRole.cs": {
+    "mtime": 1788533625.311189,
+    "seen": 1788593364.6216645,
+    "ast_hash": "19c60777618402242bda01c7bb9ec2fe",
+    "semantic_hash": "19c60777618402242bda01c7bb9ec2fe"
+  },
+  "api/Data/Entities/Role.cs": {
+    "mtime": 1788533625.9507086,
+    "seen": 1788593364.621665,
+    "ast_hash": "3390b4e01c953c6992ac9eb307ba906f",
+    "semantic_hash": "3390b4e01c953c6992ac9eb307ba906f"
+  },
+  "api/Data/Entities/Song.cs": {
+    "mtime": 1788541826.5091674,
+    "seen": 1788593364.6216655,
+    "ast_hash": "f2a02c83784fd43383687b65bbd0b0ce",
+    "semantic_hash": "f2a02c83784fd43383687b65bbd0b0ce"
+  },
+  "api/Data/Entities/SongIdentifier.cs": {
+    "mtime": 1788533627.1414063,
+    "seen": 1788593364.6216662,
+    "ast_hash": "b88edd4a1b8b7ad0bf363c7abe903451",
+    "semantic_hash": "b88edd4a1b8b7ad0bf363c7abe903451"
+  },
+  "api/Data/Entities/Vote.cs": {
+    "mtime": 1772126516.7272615,
+    "seen": 1788593364.621667,
+    "ast_hash": "a3ef3057bcca52ecc0ccd44b5575cf75",
+    "semantic_hash": "a3ef3057bcca52ecc0ccd44b5575cf75"
+  },
+  "api/Data/Migrations/20240620220302_Initial.cs": {
+    "mtime": 1772126516.7274096,
+    "seen": 1788593364.6216676,
+    "ast_hash": "d7ce92512b6697458558ae7be6630623",
+    "semantic_hash": "d7ce92512b6697458558ae7be6630623"
+  },
+  "api/Data/Migrations/20260904120000_FixRelationsAndGoogleAccount.cs": {
+    "mtime": 1788533832.6463623,
+    "seen": 1788593364.621668,
+    "ast_hash": "c695c18a49298f7bf70cf34113412664",
+    "semantic_hash": "c695c18a49298f7bf70cf34113412664"
+  },
+  "api/Data/Migrations/20260904183000_GoogleMemberSessionAndInvites.cs": {
+    "mtime": 1788539937.3458464,
+    "seen": 1788593364.6216686,
+    "ast_hash": "f3e7c25c5606dcb58ac6983fab396573",
+    "semantic_hash": "f3e7c25c5606dcb58ac6983fab396573"
+  },
+  "api/Data/Migrations/20260904190700_AlbumDesk.cs": {
+    "mtime": 1788541922.7414575,
+    "seen": 1788593364.621669,
+    "ast_hash": "054bbf052f429db5cf2e4e314ac21536",
+    "semantic_hash": "054bbf052f429db5cf2e4e314ac21536"
+  },
+  "api/Data/Migrations/20260904194500_ProposalReviews.cs": {
+    "mtime": 1788544214.3051493,
+    "seen": 1788593364.6216698,
+    "ast_hash": "879c439acd382a4cf2e901e7449af89c",
+    "semantic_hash": "879c439acd382a4cf2e901e7449af89c"
+  },
+  "api/Handlers/Albums/AddProposalReview.cs": {
+    "mtime": 1788544547.2418861,
+    "seen": 1788593364.6216705,
+    "ast_hash": "8f160987af4416706d706c1db642dab4",
+    "semantic_hash": "8f160987af4416706d706c1db642dab4"
+  },
+  "api/Handlers/Albums/CreateAlbum.cs": {
+    "mtime": 1788541857.5569518,
+    "seen": 1788593364.621671,
+    "ast_hash": "8e3de2e95b6b6b6192996a888b4efefd",
+    "semantic_hash": "8e3de2e95b6b6b6192996a888b4efefd"
+  },
+  "api/Handlers/Albums/CreateProposal.cs": {
+    "mtime": 1788543145.7909358,
+    "seen": 1788593364.6216714,
+    "ast_hash": "12f83adfbf4a70046aa09eea1923b9f5",
+    "semantic_hash": "12f83adfbf4a70046aa09eea1923b9f5"
+  },
+  "api/Handlers/Albums/DecideProposal.cs": {
+    "mtime": 1788543155.0198207,
+    "seen": 1788593364.621672,
+    "ast_hash": "02b05a8a96e44ca80d96a047c3c27dfa",
+    "semantic_hash": "02b05a8a96e44ca80d96a047c3c27dfa"
+  },
+  "api/Handlers/Albums/GetAlbum.cs": {
+    "mtime": 1788544150.1753833,
+    "seen": 1788593364.6216726,
+    "ast_hash": "141b037720b746fb5e0c9c969f07767f",
+    "semantic_hash": "141b037720b746fb5e0c9c969f07767f"
+  },
+  "api/Handlers/Albums/GetProposal.cs": {
+    "mtime": 1788541883.2154446,
+    "seen": 1788593364.621673,
+    "ast_hash": "4bc1a796ec38b50339d1de46779bc84d",
+    "semantic_hash": "4bc1a796ec38b50339d1de46779bc84d"
+  },
+  "api/Handlers/Albums/ListAlbums.cs": {
+    "mtime": 1788541859.9749377,
+    "seen": 1788593364.6216738,
+    "ast_hash": "02c009df7ec7c4ef1944cd85675e0a82",
+    "semantic_hash": "02c009df7ec7c4ef1944cd85675e0a82"
+  },
+  "api/Handlers/Albums/RemoveProposalReview.cs": {
+    "mtime": 1788544173.6481812,
+    "seen": 1788593364.6216743,
+    "ast_hash": "e73f5818ae3496728a53bda3d37ea4ef",
+    "semantic_hash": "e73f5818ae3496728a53bda3d37ea4ef"
+  },
+  "api/Handlers/Albums/UpdateAlbum.cs": {
+    "mtime": 1788541868.3289106,
+    "seen": 1788593364.621675,
+    "ast_hash": "ebd7fa4174ca06fc8953cd80922c9445",
+    "semantic_hash": "ebd7fa4174ca06fc8953cd80922c9445"
+  },
+  "api/Handlers/Albums/WithdrawProposal.cs": {
+    "mtime": 1788541880.9393153,
+    "seen": 1788593364.6216755,
+    "ast_hash": "1b23509629c7f15f3e9d8bc3bb37574e",
+    "semantic_hash": "1b23509629c7f15f3e9d8bc3bb37574e"
+  },
+  "api/Handlers/Auth/CompleteGoogleLogin.cs": {
+    "mtime": 1788539854.5558732,
+    "seen": 1788593364.6216762,
+    "ast_hash": "125f5256d0a8103c8028e6769d417ca3",
+    "semantic_hash": "125f5256d0a8103c8028e6769d417ca3"
+  },
+  "api/Handlers/Auth/GetSession.cs": {
+    "mtime": 1788539856.4285533,
+    "seen": 1788593364.6216767,
+    "ast_hash": "4f897bd6443beabd6a92671fe2d82a29",
+    "semantic_hash": "4f897bd6443beabd6a92671fe2d82a29"
+  },
+  "api/Handlers/Bands/AddBandDriveSong.cs": {
+    "mtime": 1788539882.0600622,
+    "seen": 1788593364.6216774,
+    "ast_hash": "15ee82840dd303bf285c04b0dd45dcb3",
+    "semantic_hash": "15ee82840dd303bf285c04b0dd45dcb3"
+  },
+  "api/Handlers/Bands/CreateBandInvite.cs": {
+    "mtime": 1788539864.0648909,
+    "seen": 1788593364.6216779,
+    "ast_hash": "1eefdbcd6a10423f74f58b4a3224f002",
+    "semantic_hash": "1eefdbcd6a10423f74f58b4a3224f002"
+  },
+  "api/Handlers/Bands/ListBandDriveFiles.cs": {
+    "mtime": 1788539878.0549283,
+    "seen": 1788593364.6216784,
+    "ast_hash": "e2c09e49f7a556e93e938afe4f9d8b5b",
+    "semantic_hash": "e2c09e49f7a556e93e938afe4f9d8b5b"
+  },
+  "api/Handlers/Bands/ListBandSongs.cs": {
+    "mtime": 1788550442.5026517,
+    "seen": 1788593364.6216793,
+    "ast_hash": "aea1e0920b51fecff841f5acb6f66c37",
+    "semantic_hash": "aea1e0920b51fecff841f5acb6f66c37"
+  },
+  "api/Handlers/Bands/SetBandDriveFolder.cs": {
+    "mtime": 1788539860.2904117,
+    "seen": 1788593364.6216798,
+    "ast_hash": "6e146d71f03f527357eed5d72f4bab58",
+    "semantic_hash": "6e146d71f03f527357eed5d72f4bab58"
+  },
+  "api/Handlers/Invites/AcceptBandInvite.cs": {
+    "mtime": 1788540273.6716802,
+    "seen": 1788593364.6216807,
+    "ast_hash": "2e31683cf463296d0145a12e05851899",
+    "semantic_hash": "2e31683cf463296d0145a12e05851899"
+  },
+  "api/Handlers/Members/GetMember.cs": {
+    "mtime": 1788539893.23399,
+    "seen": 1788593364.6216812,
+    "ast_hash": "2cf91ecd835c6acf579d3017cfb26fa3",
+    "semantic_hash": "2cf91ecd835c6acf579d3017cfb26fa3"
+  },
+  "api/Handlers/Members/ListMembers.cs": {
+    "mtime": 1788539893.687196,
+    "seen": 1788593364.6216817,
+    "ast_hash": "b86d66ea0f763267adf77f467e80b89d",
+    "semantic_hash": "b86d66ea0f763267adf77f467e80b89d"
+  },
+  "api/Integrations/Google/GoogleDriveService.cs": {
+    "mtime": 1788540322.5078704,
+    "seen": 1788593364.6216824,
+    "ast_hash": "9f106a88ac6172e8961908a0bc61fc3f",
+    "semantic_hash": "9f106a88ac6172e8961908a0bc61fc3f"
+  },
+  "api/Integrations/Google/GoogleOptions.cs": {
+    "mtime": 1788539817.724271,
+    "seen": 1788593364.621683,
+    "ast_hash": "d4624409a6be6969fc4ba21b7cc2d472",
+    "semantic_hash": "d4624409a6be6969fc4ba21b7cc2d472"
+  },
+  "api/Integrations/Google/IGoogleDriveService.cs": {
+    "mtime": 1788539821.37156,
+    "seen": 1788593364.6216834,
+    "ast_hash": "dabfb7de59e38d12a7f070f1e332563e",
+    "semantic_hash": "dabfb7de59e38d12a7f070f1e332563e"
+  },
+  "api/MigrateDatabaseStartupFilter.cs": {
+    "mtime": 1772126516.7274795,
+    "seen": 1788593364.621684,
+    "ast_hash": "33b1917d1381da1e73f0da247e0508a7",
+    "semantic_hash": "33b1917d1381da1e73f0da247e0508a7"
+  },
+  "api/Program.cs": {
+    "mtime": 1788539921.4649312,
+    "seen": 1788593364.6216846,
+    "ast_hash": "b2e8ef7331bbfdf8ea975461f6eaab4f",
+    "semantic_hash": "b2e8ef7331bbfdf8ea975461f6eaab4f"
+  },
+  "api/Properties/launchSettings.json": {
+    "mtime": 1788533693.8120134,
+    "seen": 1788593364.621685,
+    "ast_hash": "6cbe0c7bf46f0127de4aea76f56af4b6",
+    "semantic_hash": "6cbe0c7bf46f0127de4aea76f56af4b6"
+  },
+  "api/SeedDataStartupFilter.cs": {
+    "mtime": 1788539924.2696583,
+    "seen": 1788593364.6216855,
+    "ast_hash": "46416ede2c2d4e7b46e710fb29cff10d",
+    "semantic_hash": "46416ede2c2d4e7b46e710fb29cff10d"
+  },
+  "api/Services/AlbumApproval.cs": {
+    "mtime": 1788543187.3216014,
+    "seen": 1788593364.621686,
+    "ast_hash": "783ef0e50cc00eb79616abead1a20dcc",
+    "semantic_hash": "783ef0e50cc00eb79616abead1a20dcc"
+  },
+  "api/Services/AlbumDtoMapper.cs": {
+    "mtime": 1788545970.4505093,
+    "seen": 1788593364.6216867,
+    "ast_hash": "931bfee5302d9ad602f8a62e94aa1874",
+    "semantic_hash": "931bfee5302d9ad602f8a62e94aa1874"
+  },
+  "api/Services/AudioPlaybackService.cs": {
+    "mtime": 1788539886.7531984,
+    "seen": 1788593364.6216874,
+    "ast_hash": "70b2bf15e19665434a614314a76c2794",
+    "semantic_hash": "70b2bf15e19665434a614314a76c2794"
+  },
+  "api/Services/BandRoles.cs": {
+    "mtime": 1788541815.925817,
+    "seen": 1788593364.621688,
+    "ast_hash": "56beaa0b70685a1c67e204ab8f6d8695",
+    "semantic_hash": "56beaa0b70685a1c67e204ab8f6d8695"
+  },
+  "api/Services/DriveFolderScope.cs": {
+    "mtime": 1788539805.7468228,
+    "seen": 1788593364.6216884,
+    "ast_hash": "7ca036e1046ab6a4984c657656f60942",
+    "semantic_hash": "7ca036e1046ab6a4984c657656f60942"
+  },
+  "api/Services/IAudioPlaybackService.cs": {
+    "mtime": 1788539887.295283,
+    "seen": 1788593364.6216888,
+    "ast_hash": "3189e035fcfb088a689ffa42943779fb",
+    "semantic_hash": "3189e035fcfb088a689ffa42943779fb"
+  },
+  "api/Services/IInviteMailer.cs": {
+    "mtime": 1788539809.3579009,
+    "seen": 1788593364.6216893,
+    "ast_hash": "27ddcc215ffa3c94e38106b14dfa05d3",
+    "semantic_hash": "27ddcc215ffa3c94e38106b14dfa05d3"
+  },
+  "api/Services/IMemberSession.cs": {
+    "mtime": 1788539806.1263187,
+    "seen": 1788593364.62169,
+    "ast_hash": "89c7bfc58902cf594ac404b2d54d0f34",
+    "semantic_hash": "89c7bfc58902cf594ac404b2d54d0f34"
+  },
+  "api/Services/InviteMailer.cs": {
+    "mtime": 1788539812.3327339,
+    "seen": 1788593364.6216905,
+    "ast_hash": "2b656c9523c8723a76fc72badfae095d",
+    "semantic_hash": "2b656c9523c8723a76fc72badfae095d"
+  },
+  "api/Services/MemberDtoMapper.cs": {
+    "mtime": 1788539846.883254,
+    "seen": 1788593364.6216912,
+    "ast_hash": "7b0024397b4cc4b5d3474726d7a565f4",
+    "semantic_hash": "7b0024397b4cc4b5d3474726d7a565f4"
+  },
+  "api/Services/MemberSession.cs": {
+    "mtime": 1788539808.419919,
+    "seen": 1788593364.6216917,
+    "ast_hash": "d60e31897746aca96f033cff4b23f2fa",
+    "semantic_hash": "d60e31897746aca96f033cff4b23f2fa"
+  },
+  "api/api.csproj": {
+    "mtime": 1788535790.7898347,
+    "seen": 1788593364.6216922,
+    "ast_hash": "7fb5ef3114e6bc1bc2a47ab1cc62509c",
+    "semantic_hash": "7fb5ef3114e6bc1bc2a47ab1cc62509c"
+  },
+  "api/appsettings.Development.json": {
+    "mtime": 1788540276.6666446,
+    "seen": 1788593364.6216927,
+    "ast_hash": "293460397badc72c8c6e608fbc8b6766",
+    "semantic_hash": "293460397badc72c8c6e608fbc8b6766"
+  },
+  "api/appsettings.json": {
+    "mtime": 1788540276.4468217,
+    "seen": 1788593364.6216934,
+    "ast_hash": "e4ad715bfdbb454e6a21801dc9201428",
+    "semantic_hash": "e4ad715bfdbb454e6a21801dc9201428"
+  },
+  "app/.vscode/extensions.json": {
+    "mtime": 1772126851.9887176,
+    "seen": 1788593364.6216938,
+    "ast_hash": "d3b118b41884c371c18cbd55e392eb07",
+    "semantic_hash": "d3b118b41884c371c18cbd55e392eb07"
+  },
+  "app/.vscode/launch.json": {
+    "mtime": 1772126851.9888136,
+    "seen": 1788593364.6216946,
+    "ast_hash": "c6799d2f7ae6f5d7a740d1023654bb8d",
+    "semantic_hash": "c6799d2f7ae6f5d7a740d1023654bb8d"
+  },
+  "app/.vscode/tasks.json": {
+    "mtime": 1772126851.9888647,
+    "seen": 1788593364.621695,
+    "ast_hash": "5a70b3d3763f6628c8083d7b033b98b8",
+    "semantic_hash": "5a70b3d3763f6628c8083d7b033b98b8"
+  },
+  "app/src/app/app.component.spec.ts": {
+    "mtime": 1788534961.4281209,
+    "seen": 1788593364.6216955,
+    "ast_hash": "2c0c5f115a7aabf7e2b252d75d0c6029",
+    "semantic_hash": "2c0c5f115a7aabf7e2b252d75d0c6029"
+  },
+  "app/src/app/app.component.ts": {
+    "mtime": 1788533706.2914588,
+    "seen": 1788593364.6216962,
+    "ast_hash": "7229b1e6db8a0e82eade286fb13ec83c",
+    "semantic_hash": "7229b1e6db8a0e82eade286fb13ec83c"
+  },
+  "app/src/app/app.config.server.ts": {
+    "mtime": 1788534961.4281209,
+    "seen": 1788593364.621697,
+    "ast_hash": "0ec02004d743f8e505a8abf581b8652b",
+    "semantic_hash": "0ec02004d743f8e505a8abf581b8652b"
+  },
+  "app/src/app/app.config.ts": {
+    "mtime": 1788540365.8825848,
+    "seen": 1788593364.6216974,
+    "ast_hash": "de69a5e11563dc07f524d967efa916fc",
+    "semantic_hash": "de69a5e11563dc07f524d967efa916fc"
+  },
+  "app/src/app/app.routes.server.ts": {
+    "mtime": 1788533709.5731766,
+    "seen": 1788593364.6216984,
+    "ast_hash": "0f006a27bf50929c8212290c09d787dd",
+    "semantic_hash": "0f006a27bf50929c8212290c09d787dd"
+  },
+  "app/src/app/app.routes.ts": {
+    "mtime": 1788540101.4647775,
+    "seen": 1788593364.6216989,
+    "ast_hash": "105bdbc7ec4314cb784a79f444509849",
+    "semantic_hash": "105bdbc7ec4314cb784a79f444509849"
+  },
+  "app/src/app/core/credentials.interceptor.ts": {
+    "mtime": 1788540406.2513087,
+    "seen": 1788593364.6216996,
+    "ast_hash": "6704bea778b80195dc0847e241aee6d6",
+    "semantic_hash": "6704bea778b80195dc0847e241aee6d6"
+  },
+  "app/src/app/core/google-folder-picker.service.ts": {
+    "mtime": 1788540437.4482977,
+    "seen": 1788593364.6217003,
+    "ast_hash": "d5bd8324280b0d20c5fa7238ab80c52b",
+    "semantic_hash": "d5bd8324280b0d20c5fa7238ab80c52b"
+  },
+  "app/src/app/core/models.ts": {
+    "mtime": 1788544226.8092144,
+    "seen": 1788593364.6217008,
+    "ast_hash": "b1cd3cbd087d6777cc8844970abf61cb",
+    "semantic_hash": "b1cd3cbd087d6777cc8844970abf61cb"
+  },
+  "app/src/app/core/session.service.ts": {
+    "mtime": 1788540406.7774246,
+    "seen": 1788593364.6217015,
+    "ast_hash": "93f090b92257aff596cea96052435af1",
+    "semantic_hash": "93f090b92257aff596cea96052435af1"
+  },
+  "app/src/app/core/tracklink-api.service.ts": {
+    "mtime": 1788544228.4257562,
+    "seen": 1788593364.6217022,
+    "ast_hash": "e4f45b37bee024e47e399fdd0b874e83",
+    "semantic_hash": "e4f45b37bee024e47e399fdd0b874e83"
+  },
+  "app/src/app/features/invite/join-page.component.spec.ts": {
+    "mtime": 1788540365.8825848,
+    "seen": 1788593364.6217027,
+    "ast_hash": "e0891a7b2922deb306bcffc89016d055",
+    "semantic_hash": "e0891a7b2922deb306bcffc89016d055"
+  },
+  "app/src/app/features/invite/join-page.component.ts": {
+    "mtime": 1788540365.8825848,
+    "seen": 1788593364.6217031,
+    "ast_hash": "73a0f698c97f4f43faaebe85a2d18bf7",
+    "semantic_hash": "73a0f698c97f4f43faaebe85a2d18bf7"
+  },
+  "app/src/app/features/studio/studio-album-desk.component.ts": {
+    "mtime": 1788547118.2570915,
+    "seen": 1788593364.6217039,
+    "ast_hash": "6bb88fdd7c679b9c74a4b96b4bdd9467",
+    "semantic_hash": "6bb88fdd7c679b9c74a4b96b4bdd9467"
+  },
+  "app/src/app/features/studio/studio-album-work.component.spec.ts": {
+    "mtime": 1788544423.2775097,
+    "seen": 1788593364.6217053,
+    "ast_hash": "262864b1a752e6920915cc7cc11ec2a2",
+    "semantic_hash": "262864b1a752e6920915cc7cc11ec2a2"
+  },
+  "app/src/app/features/studio/studio-album-work.component.ts": {
+    "mtime": 1788544548.2901874,
+    "seen": 1788593364.6217058,
+    "ast_hash": "5ccbe26637792af22f5a5bf5416b76c9",
+    "semantic_hash": "5ccbe26637792af22f5a5bf5416b76c9"
+  },
+  "app/src/app/features/studio/studio-band-setup.component.ts": {
+    "mtime": 1788540474.297378,
+    "seen": 1788593364.6217062,
+    "ast_hash": "cb4f929e31feaf75cb4e387c3dad498a",
+    "semantic_hash": "cb4f929e31feaf75cb4e387c3dad498a"
+  },
+  "app/src/app/features/studio/studio-deck.component.ts": {
+    "mtime": 1788544242.8805861,
+    "seen": 1788593364.621707,
+    "ast_hash": "b4a9e2d1c4f678825d3ab32063cc9e3c",
+    "semantic_hash": "b4a9e2d1c4f678825d3ab32063cc9e3c"
+  },
+  "app/src/app/features/studio/studio-drive-list.component.ts": {
+    "mtime": 1788536737.7926915,
+    "seen": 1788593364.6217074,
+    "ast_hash": "c9cecc971e5753a2262440a8cad98079",
+    "semantic_hash": "c9cecc971e5753a2262440a8cad98079"
+  },
+  "app/src/app/features/studio/studio-page.component.spec.ts": {
+    "mtime": 1788550452.261978,
+    "seen": 1788593364.621708,
+    "ast_hash": "73efbb53dcfa1cbcd86fe362276bde76",
+    "semantic_hash": "73efbb53dcfa1cbcd86fe362276bde76"
+  },
+  "app/src/app/features/studio/studio-page.component.ts": {
+    "mtime": 1788550508.6503775,
+    "seen": 1788593364.6217086,
+    "ast_hash": "4d7c91438643ee9a64f2350919707bc8",
+    "semantic_hash": "4d7c91438643ee9a64f2350919707bc8"
+  },
+  "app/src/app/features/studio/studio-session-facts.component.ts": {
+    "mtime": 1788537224.62791,
+    "seen": 1788593364.6217093,
+    "ast_hash": "cb5d31a124de35af3e5be94707148a2e",
+    "semantic_hash": "cb5d31a124de35af3e5be94707148a2e"
+  },
+  "app/src/main.server.ts": {
+    "mtime": 1788534966.087142,
+    "seen": 1788593364.6217098,
+    "ast_hash": "2f71eece0e7a35ed6c13195b53ae425b",
+    "semantic_hash": "2f71eece0e7a35ed6c13195b53ae425b"
+  },
+  "app/src/main.ts": {
+    "mtime": 1788534968.2035546,
+    "seen": 1788593364.6217103,
+    "ast_hash": "6ab999e8c211c6c2339e72aea309b3f2",
+    "semantic_hash": "6ab999e8c211c6c2339e72aea309b3f2"
+  },
+  "app/src/server.ts": {
+    "mtime": 1788534973.4289083,
+    "seen": 1788593364.621711,
+    "ast_hash": "af6df081dddc732cf6dbc5d90d28321d",
+    "semantic_hash": "af6df081dddc732cf6dbc5d90d28321d"
+  }
+}

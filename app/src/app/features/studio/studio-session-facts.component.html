@@ -1,0 +1,44 @@
+<dl class="facts">
+  <div>
+    <dt>Username</dt>
+    <dd>{{ currentMember().username }}</dd>
+  </div>
+
+  <div>
+    <dt>Email</dt>
+    <dd>{{ currentMember().email || 'Not set' }}</dd>
+  </div>
+
+  <div>
+    <dt>Name</dt>
+    <dd>{{ currentMember().fullname || 'Not set' }}</dd>
+  </div>
+
+  <div>
+    <dt>Bands</dt>
+
+    <dd>
+      @if (currentMember().bands.length === 0) {
+        None yet
+        } @else {
+          @for (band of currentMember().bands; track band.id) {
+            <span class="chip">{{ band.name }}</span>
+          }
+        }
+    </dd>
+  </div>
+
+  <div>
+    <dt>Roles</dt>
+
+    <dd>
+      @if (currentMember().roles.length === 0) {
+        None yet
+        } @else {
+          @for (role of currentMember().roles; track role.id) {
+            <span class="chip">{{ role.roleName }}</span>
+          }
+        }
+    </dd>
+  </div>
+</dl>

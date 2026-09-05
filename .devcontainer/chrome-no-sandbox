@@ -1,0 +1,9 @@
+#!/bin/sh
+# Karma/ChromeHeadless needs --no-sandbox inside a container.
+for candidate in /usr/bin/chromium /usr/bin/chromium-browser /usr/bin/google-chrome; do
+  if [ -x "$candidate" ]; then
+    exec "$candidate" --no-sandbox --disable-dev-shm-usage --disable-gpu "$@"
+  fi
+done
+echo "chrome-no-sandbox: no Chromium/Chrome binary found" >&2
+exit 1

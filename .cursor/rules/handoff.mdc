@@ -1,0 +1,38 @@
+---
+description: Short-chat handoff to cut token burn; agents cannot open new chats
+alwaysApply: true
+---
+
+# Handoff (token control)
+
+Agents **cannot** create a new Cursor chat. When a handoff is needed, **overwrite** `agents-docs/HANDOFF.md` and tell the user to start a **new chat** with `@agents-docs/HANDOFF.md`.
+
+## File size rule (mandatory)
+
+- **Never append** to `HANDOFF.md`. Always replace the entire file.
+- One active handoff only — no history stack in this file.
+- Keep sections short (bullets, paths, not log dumps).
+
+## When to hand off
+
+- User says "handoff", "new chat", or "wrap up this session"
+- Thread is long (many tool rounds, large pastes, repeated failed approaches) and more major work remains
+- Switching to a clearly separate objective
+- Work is blocked on credentials, a product decision, or an external service
+
+## What to do (new handoff)
+
+1. **Overwrite** `agents-docs/HANDOFF.md` completely — `Status: active`; fill Goal, Completed, Changed files, Decisions, Failed approaches, Current issue, Next steps, Commands (brief).
+2. Stop major new work in this chat after writing the handoff (unless the user says continue here).
+3. Tell the user the one-liner for the new chat.
+
+## When the task is finished
+
+After the user-approved work is done (or they abandon the handoff objective):
+
+1. **Clear** `agents-docs/HANDOFF.md`: set `Status: none` and empty all section bodies (restore the short template — do not leave old Completed/Next steps lying around).
+2. Do this in the same turn you claim done, so the next chat does not reload stale handoff context.
+
+## New-chat bootstrap
+
+If `Status: active`, read the handoff first and continue Next steps. Do not reload the whole monorepo or redo Completed work. When that work is finished → **clear** the file as above.

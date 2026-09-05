@@ -1,7 +1,14 @@
-## Get started 
-- Run start-database.sh in the root directory using git-bash.
-Make sure you have Docker and Linux subsystem installed before you run it.
-- Open usico.sln in your IDE (Visual Studio, Rider, etc).
+## Get started
+
+TrackLink stores band/song **metadata**. Audio files stay in Google Drive (or any HTTP URL).
+
+1. Start SQL Server: `./start-database.sh` (Docker).
+2. API: `dotnet run --project api` (http://localhost:5180).
+3. App: `cd app && npm start` (http://localhost:4200). `/api` is proxied to the API.
+
+Lint the Angular client with `cd app && npm run lint` (junolint) or `npm run lint:fix`.
+
+Agent instructions: [`AGENTS.md`](AGENTS.md). Feature contracts: [`agents-docs/FEATURES.md`](agents-docs/FEATURES.md).
 
 ## Vision
 I want to create a tool that handles plans the music production and album assembly for musicians that work together remotely.
@@ -12,7 +19,7 @@ The storage will be handled by Google Drive or any other cloud provider, to let 
 - Voting system for what songs should be in what album.
 - Voting system for names.
 - Voting systen for album art, and song order.
-- Review system for adding songs to album, this will work by selecting timestamps from the song and adding a comment. 
+- Review system for adding songs to album, this will work by selecting timestamps from the song and adding a comment.
 - Album management.
 - See song versions.
 - Search songs.

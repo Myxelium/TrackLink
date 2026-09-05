@@ -1,0 +1,78 @@
+<section class="pane desk-pane">
+  <header class="pane-head">
+    <h1>Albums</h1>
+    <p>{{ albums().length === 1 ? '1 catalog' : albums().length + ' catalogs' }}</p>
+  </header>
+
+  @if (canCreate()) {
+    @if (creating) {
+      <form (ngSubmit)="createAlbum()" class="desk-create-form">
+        <label>
+          <span>Name</span>
+
+          <input
+            (ngModelChange)="newAlbumNameChange.emit($event)"
+            [ngModel]="newAlbumName()"
+            name="newAlbumName"
+            placeholder="First Light"
+            required
+            type="text"
+          >
+        </label>
+
+        <label>
+          <span>Who approves</span>
+
+          <select
+            (ngModelChange)="newAlbumRuleChange.emit($event)"
+            [ngModel]="newAlbumRule()"
+            name="newAlbumRule"
+          >
+            <option value="all">All members</option>
+            <option value="owner_uploaders">Owner and uploaders</option>
+          </select>
+        </label>
+
+        <div class="desk-create-actions">
+          <button class="text-action is-lead" type="submit">Create</button>
+
+          <button
+            (click)="creating = false"
+            class="text-action"
+            type="button"
+          >Cancel</button>
+        </div>
+      </form>
+    } @else {
+      <div class="desk-create">
+        <button
+          (click)="creating = true"
+          class="text-action is-lead"
+          type="button"
+        >New album</button>
+      </div>
+    }
+  }
+
+  <div class="sheet album-sheet">
+    @for (album of albums(); track album.id) {
+      <button
+        (click)="chooseAlbum(album)"
+        [class.is-armed]="selectedAlbumId() === album.id"
+        class="sheet-row take-row album-pick"
+        type="button"
+      >
+        <span class="take-name">
+          {{ album.name }}
+          @if (album.archived) {
+            <span class="mono">archived</span>
+          }
+        </span>
+
+        <span class="mono">{{ album.trackCount }} · {{ album.openProposalCount }}</span>
+      </button>
+    } @empty {
+      <p class="empty">Name an album to start a record.</p>
+    }
+  </div>
+</section>

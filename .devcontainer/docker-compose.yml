@@ -1,0 +1,35 @@
+# Dev Container override. Reuses sql-server-db from ../docker-compose.yml.
+# The production `api` image is not started here — run the API with `dotnet run`.
+services:
+  api:
+    profiles: ["prod-api"]
+
+  sql-server-db:
+    volumes:
+      - tracklink-sql-data:/var/opt/mssql
+
+  # Paths are relative to the first compose file (repo-root docker-compose.yml).
+  devcontainer:
+    build:
+      context: .devcontainer
+      dockerfile: Dockerfile
+    init: true
+    shm_size: 1gb
+    command: sleep infinity
+    depends_on:
+      - sql-server-db
+    volumes:
+      - .:/workspaces/TrackLink:cached
+      # app/ depends on file:../../JunoLint → /workspaces/JunoLint
+      - ../JunoLint:/workspaces/JunoLint:cached
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:5180
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      NG_CLI_ANALYTICS: "false"
+      # appsettings.Development.json uses localhost; from this service the DB hostname is sql-server-db.
+      ConnectionStrings__Database: "Server=sql-server-db,1433;Database=usico;User Id=sa;Password=VerySecretPassword!;Trusted_Connection=False;TrustServerCertificate=True;"
+
+volumes:
+  tracklink-sql-data:

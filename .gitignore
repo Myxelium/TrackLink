@@ -1,3 +1,18 @@
-﻿api/bin
-api/obj
-api/Properties
+﻿api/bin/
+api/obj/
+api/logs/
+api.Tests/bin/
+api.Tests/obj/
+*.user
+app/node_modules/
+app/dist/
+app/.angular/
+app/coverage/
+
+# Graphify local-only (commit graph.json + GRAPH_REPORT.md)
+graphify-out/cost.json
+graphify-out/cache/
+graphify-out/graph.html
+graphify-out/.graphify_root
+graphify-out/.graphify_python
+

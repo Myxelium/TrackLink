@@ -1,0 +1,21 @@
+<div class="transport-core">
+  <p class="now">{{ armedTakeLabel() }}</p>
+
+  @if (playingId(); as id) {
+    <audio
+      #player
+      [src]="audioUrl(id)"
+      autoplay
+      controls
+    >
+    </audio>
+  }
+
+  <div class="transport-meta">
+    <p class="drive">{{ driveStatusText() }}</p>
+
+    @if (showConnect()) {
+      <a [href]="googleLoginHref()">Sign in with Google</a>
+    }
+  </div>
+</div>

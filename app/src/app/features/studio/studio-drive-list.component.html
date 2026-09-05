@@ -1,0 +1,21 @@
+<div class="drive-block">
+  <header class="pane-head">
+    <h2>Drive</h2>
+    <p>Link into the catalog</p>
+  </header>
+
+  <div class="sheet">
+    @for (driveFile of driveFiles(); track driveFile.id) {
+      <button
+        (click)="chooseDriveFile(driveFile)"
+        class="sheet-row take-row"
+        type="button"
+      >
+        <span class="take-name">{{ driveFile.name }}</span>
+        <span class="mono">gdrive</span>
+      </button>
+      } @empty {
+        <p class="empty">No audio inside the band Drive folder that you can read.</p>
+      }
+  </div>
+</div>

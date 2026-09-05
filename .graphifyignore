@@ -1,0 +1,33 @@
+# Scope the graph to product source + agent docs.
+# Graphify also honors .gitignore; this file only excludes more.
+# `*` hides the rest of the monorepo (docker, scripts, JunoLint, tests, etc.).
+
+*
+!app/
+!app/src/
+!app/src/**
+!api/
+!api/**
+!agents-docs/
+!agents-docs/**
+
+# Build / generated / lockfile / secret noise (even if someone widens the allowlist)
+node_modules/
+**/node_modules/
+**/bin/
+**/obj/
+**/dist/
+**/.angular/
+**/coverage/
+graphify-out/
+**/*.Designer.cs
+**/DbContextModelSnapshot.cs
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+**/*.user
+**/.env
+**/.env.*
+**/credentials.json
+**/secrets.json
+**/*Secret*

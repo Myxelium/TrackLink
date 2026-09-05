@@ -22,6 +22,209 @@ namespace api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("api.Data.Entities.Album", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovalRule")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("all");
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ArtDriveFileId")
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<bool>("ArtLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("BandId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("OrderLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BandId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("Album", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlbumId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("ProposedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("SongId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlbumId");
+
+                    b.HasIndex("ProposedBy");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("AlbumProposal", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposalDecision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProposalId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("ProposalId", "MemberId")
+                        .IsUnique();
+
+                    b.ToTable("AlbumProposalDecision", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposalReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("EndMs")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProposalId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartMs")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("ProposalId");
+
+                    b.ToTable("AlbumProposalReview", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumTrack", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("AlbumId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProposalId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SongId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProposalId");
+
+                    b.HasIndex("SongId");
+
+                    b.HasIndex("AlbumId", "SongId")
+                        .IsUnique();
+
+                    b.ToTable("AlbumTrack", (string)null);
+                });
+
             modelBuilder.Entity("api.Data.Entities.Band", b =>
                 {
                     b.Property<int>("Id")
@@ -32,6 +235,15 @@ namespace api.Data.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime");
+
+                    b.Property<string>("DriveFolderId")
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("DriveFolderName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Genre")
                         .HasMaxLength(50)
@@ -49,28 +261,134 @@ namespace api.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int?>("OwnerMemberId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerMemberId");
 
                     b.ToTable("Band", (string)null);
                 });
 
-            modelBuilder.Entity("api.Data.Entities.BandMember", b =>
+            modelBuilder.Entity("api.Data.Entities.BandInvite", b =>
                 {
-                    b.Property<int>("BandId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int>("BandId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(320)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BandId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("BandInvite", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.BandMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BandId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MemberId")
                         .HasColumnType("int");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("member");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BandId");
 
                     b.HasIndex("MemberId");
 
                     b.ToTable("BandMember", (string)null);
+                });
+
+            modelBuilder.Entity("api.Data.Entities.GoogleAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId")
+                        .IsUnique();
+
+                    b.ToTable("GoogleAccount", (string)null);
                 });
 
             modelBuilder.Entity("api.Data.Entities.Member", b =>
@@ -81,15 +399,25 @@ namespace api.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(320)");
+
                     b.Property<string>("Fullname")
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<string>("Image")
-                        .HasMaxLength(100)
+                    b.Property<string>("GoogleSubject")
+                        .HasMaxLength(128)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("Image")
+                        .HasMaxLength(500)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<Guid>("UserIdentifier")
                         .HasColumnType("uniqueidentifier");
@@ -102,6 +430,10 @@ namespace api.Data.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_Members");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("GoogleSubject");
 
                     b.ToTable("Member", (string)null);
                 });
@@ -184,13 +516,21 @@ namespace api.Data.Migrations
                     b.Property<int>("PreviousVersion")
                         .HasColumnType("int");
 
+                    b.Property<string>("ContentMd5")
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime?>("SourceModifiedAt")
+                        .HasColumnType("datetime");
+
                     b.Property<int>("UploadedBy")
                         .HasColumnType("int");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
                         .HasColumnName("URL");
 
                     b.Property<int?>("Version")
@@ -219,6 +559,10 @@ namespace api.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BandId");
+
+                    b.HasIndex("SongId");
+
                     b.ToTable("SongIdentifier", (string)null);
                 });
 
@@ -233,14 +577,56 @@ namespace api.Data.Migrations
                     b.Property<int>("MemberId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SongId")
+                    b.Property<int?>("SongId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("AlbumId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Choice")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id", "MemberId", "SongId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Inclusion")
+                        .HasFilter("[Kind] = 'inclusion' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_AlbumName")
+                        .HasFilter("[Kind] = 'album_name'");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_SongName")
+                        .HasFilter("[Kind] = 'song_name' AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Order")
+                        .HasFilter("[Kind] = 'order' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Art")
+                        .HasFilter("[Kind] = 'art' AND [AlbumId] IS NOT NULL");
 
                     b.HasIndex("MemberId");
 
@@ -249,23 +635,63 @@ namespace api.Data.Migrations
                     b.ToTable("Vote", (string)null);
                 });
 
+            modelBuilder.Entity("api.Data.Entities.Band", b =>
+                {
+                    b.HasOne("api.Data.Entities.Member", "OwnerMember")
+                        .WithMany("OwnedBands")
+                        .HasForeignKey("OwnerMemberId")
+                        .HasConstraintName("FK_Band_OwnerMember");
+
+                    b.Navigation("OwnerMember");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.BandInvite", b =>
+                {
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("BandInvites")
+                        .HasForeignKey("BandId")
+                        .IsRequired()
+                        .HasConstraintName("FK_BandInvite_Band");
+
+                    b.HasOne("api.Data.Entities.Member", "CreatedByNavigation")
+                        .WithMany("CreatedInvites")
+                        .HasForeignKey("CreatedBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_BandInvite_Member");
+
+                    b.Navigation("Band");
+
+                    b.Navigation("CreatedByNavigation");
+                });
+
             modelBuilder.Entity("api.Data.Entities.BandMember", b =>
                 {
-                    b.HasOne("api.Data.Entities.Band", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("BandMembers")
+                        .HasForeignKey("BandId")
                         .IsRequired()
                         .HasConstraintName("FK_BandMember_Band");
 
-                    b.HasOne("api.Data.Entities.Member", "MemberNavigation")
-                        .WithMany()
+                    b.HasOne("api.Data.Entities.Member", "Member")
+                        .WithMany("BandMembers")
                         .HasForeignKey("MemberId")
                         .IsRequired()
                         .HasConstraintName("FK_BandMember_Member");
 
-                    b.Navigation("Member");
+                    b.Navigation("Band");
 
-                    b.Navigation("MemberNavigation");
+                    b.Navigation("Member");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.GoogleAccount", b =>
+                {
+                    b.HasOne("api.Data.Entities.Member", "Member")
+                        .WithOne("GoogleAccount")
+                        .HasForeignKey("api.Data.Entities.GoogleAccount", "MemberId")
+                        .IsRequired()
+                        .HasConstraintName("FK_GoogleAccount_Member");
+
+                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("api.Data.Entities.MemberRole", b =>
@@ -276,11 +702,11 @@ namespace api.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_MemberRole_Member");
 
-                    b.HasOne("api.Data.Entities.MemberRole", "Role")
-                        .WithMany("InverseRole")
+                    b.HasOne("api.Data.Entities.Role", "Role")
+                        .WithMany("MemberRoles")
                         .HasForeignKey("RoleId")
                         .IsRequired()
-                        .HasConstraintName("FK_MemberRole_MemberRole");
+                        .HasConstraintName("FK_MemberRole_Role");
 
                     b.Navigation("Member");
 
@@ -317,8 +743,32 @@ namespace api.Data.Migrations
                     b.Navigation("UploadedByNavigation");
                 });
 
+            modelBuilder.Entity("api.Data.Entities.SongIdentifier", b =>
+                {
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("SongIdentifiers")
+                        .HasForeignKey("BandId")
+                        .IsRequired()
+                        .HasConstraintName("FK_SongIdentifier_Band");
+
+                    b.HasOne("api.Data.Entities.Song", "Song")
+                        .WithMany("SongIdentifiers")
+                        .HasForeignKey("SongId")
+                        .IsRequired()
+                        .HasConstraintName("FK_SongIdentifier_Song");
+
+                    b.Navigation("Band");
+
+                    b.Navigation("Song");
+                });
+
             modelBuilder.Entity("api.Data.Entities.Vote", b =>
                 {
+                    b.HasOne("api.Data.Entities.Album", "Album")
+                        .WithMany("Votes")
+                        .HasForeignKey("AlbumId")
+                        .HasConstraintName("FK_Vote_Album");
+
                     b.HasOne("api.Data.Entities.Member", "Member")
                         .WithMany("Votes")
                         .HasForeignKey("MemberId")
@@ -328,22 +778,173 @@ namespace api.Data.Migrations
                     b.HasOne("api.Data.Entities.Song", "Song")
                         .WithMany("Votes")
                         .HasForeignKey("SongId")
-                        .IsRequired()
                         .HasConstraintName("FK_Vote_Song");
+
+                    b.Navigation("Album");
 
                     b.Navigation("Member");
 
                     b.Navigation("Song");
                 });
 
+            modelBuilder.Entity("api.Data.Entities.Album", b =>
+                {
+                    b.HasOne("api.Data.Entities.Band", "Band")
+                        .WithMany("Albums")
+                        .HasForeignKey("BandId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Album_Band");
+
+                    b.HasOne("api.Data.Entities.Member", "CreatedByNavigation")
+                        .WithMany("CreatedAlbums")
+                        .HasForeignKey("CreatedBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_Album_Member");
+
+                    b.Navigation("Band");
+
+                    b.Navigation("CreatedByNavigation");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposal", b =>
+                {
+                    b.HasOne("api.Data.Entities.Album", "Album")
+                        .WithMany("Proposals")
+                        .HasForeignKey("AlbumId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposal_Album");
+
+                    b.HasOne("api.Data.Entities.Member", "ProposedByNavigation")
+                        .WithMany("AlbumProposals")
+                        .HasForeignKey("ProposedBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposal_Member");
+
+                    b.HasOne("api.Data.Entities.Song", "Song")
+                        .WithMany("AlbumProposals")
+                        .HasForeignKey("SongId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposal_Song");
+
+                    b.Navigation("Album");
+
+                    b.Navigation("ProposedByNavigation");
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposalDecision", b =>
+                {
+                    b.HasOne("api.Data.Entities.Member", "Member")
+                        .WithMany("AlbumProposalDecisions")
+                        .HasForeignKey("MemberId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposalDecision_Member");
+
+                    b.HasOne("api.Data.Entities.AlbumProposal", "Proposal")
+                        .WithMany("Decisions")
+                        .HasForeignKey("ProposalId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposalDecision_Proposal");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Proposal");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposalReview", b =>
+                {
+                    b.HasOne("api.Data.Entities.Member", "Member")
+                        .WithMany("AlbumProposalReviews")
+                        .HasForeignKey("MemberId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposalReview_Member");
+
+                    b.HasOne("api.Data.Entities.AlbumProposal", "Proposal")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProposalId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumProposalReview_Proposal");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Proposal");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumTrack", b =>
+                {
+                    b.HasOne("api.Data.Entities.Album", "Album")
+                        .WithMany("Tracks")
+                        .HasForeignKey("AlbumId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumTrack_Album");
+
+                    b.HasOne("api.Data.Entities.AlbumProposal", "Proposal")
+                        .WithMany()
+                        .HasForeignKey("ProposalId")
+                        .HasConstraintName("FK_AlbumTrack_Proposal");
+
+                    b.HasOne("api.Data.Entities.Song", "Song")
+                        .WithMany("AlbumTracks")
+                        .HasForeignKey("SongId")
+                        .IsRequired()
+                        .HasConstraintName("FK_AlbumTrack_Song");
+
+                    b.Navigation("Album");
+
+                    b.Navigation("Proposal");
+
+                    b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.Album", b =>
+                {
+                    b.Navigation("Proposals");
+
+                    b.Navigation("Tracks");
+
+                    b.Navigation("Votes");
+                });
+
+            modelBuilder.Entity("api.Data.Entities.AlbumProposal", b =>
+                {
+                    b.Navigation("Decisions");
+
+                    b.Navigation("Reviews");
+                });
+
             modelBuilder.Entity("api.Data.Entities.Band", b =>
                 {
+                    b.Navigation("Albums");
+
+                    b.Navigation("BandInvites");
+
+                    b.Navigation("BandMembers");
+
                     b.Navigation("Roles");
+
+                    b.Navigation("SongIdentifiers");
                 });
 
             modelBuilder.Entity("api.Data.Entities.Member", b =>
                 {
+                    b.Navigation("AlbumProposalDecisions");
+
+                    b.Navigation("AlbumProposalReviews");
+
+                    b.Navigation("AlbumProposals");
+
+                    b.Navigation("BandMembers");
+
+                    b.Navigation("CreatedAlbums");
+
+                    b.Navigation("CreatedInvites");
+
+                    b.Navigation("GoogleAccount");
+
                     b.Navigation("MemberRoles");
+
+                    b.Navigation("OwnedBands");
 
                     b.Navigation("Roles");
 
@@ -352,13 +953,19 @@ namespace api.Data.Migrations
                     b.Navigation("Votes");
                 });
 
-            modelBuilder.Entity("api.Data.Entities.MemberRole", b =>
+            modelBuilder.Entity("api.Data.Entities.Role", b =>
                 {
-                    b.Navigation("InverseRole");
+                    b.Navigation("MemberRoles");
                 });
 
             modelBuilder.Entity("api.Data.Entities.Song", b =>
                 {
+                    b.Navigation("AlbumProposals");
+
+                    b.Navigation("AlbumTracks");
+
+                    b.Navigation("SongIdentifiers");
+
                     b.Navigation("Votes");
                 });
 #pragma warning restore 612, 618
