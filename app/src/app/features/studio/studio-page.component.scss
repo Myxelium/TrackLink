@@ -151,6 +151,31 @@ h2 {
   font-size: 0.75rem;
 }
 
+.take-search {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0 1rem 0.75rem;
+}
+
+.take-search span {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.take-search input,
+.name-propose input {
+  min-width: 0;
+  width: 100%;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.35rem;
+  background: var(--well);
+  color: var(--paper);
+  font: inherit;
+}
+
 .sheet {
   min-height: 0;
   overflow: auto;
@@ -169,6 +194,107 @@ h2 {
   background: transparent;
   color: inherit;
   text-align: left;
+}
+
+.inclusion-row {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.track-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.inclusion-choices,
+.name-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.name-contest {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 1rem 0.85rem;
+}
+
+.inclusion-row .name-contest {
+  padding: 0;
+}
+
+.order-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.order-moves,
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.order-actions {
+  padding: 0.55rem 1rem 0.85rem;
+}
+
+.name-propose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: end;
+}
+
+.art-contest label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.art-preview,
+.art-thumb {
+  display: block;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+  border-radius: 0.35rem;
+  background: var(--well);
+}
+
+.art-preview {
+  width: 7rem;
+  height: 7rem;
+}
+
+.art-pick {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  max-width: 8.5rem;
+  text-align: start;
+}
+
+.art-thumb {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.art-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.art-upload {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.art-warning {
+  margin: 0;
+  color: var(--muted, inherit);
 }
 
 .sheet-head {

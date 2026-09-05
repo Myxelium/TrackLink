@@ -8,6 +8,10 @@ Tags help grepping: `rg '\\[api\\]' agents-docs/LESSONS-INDEX.md`
 
 ## Index
 
+- Agent-launched `dotnet run` dies on shell abort — `[api] [process] [cursor] [upload]`
+- Album art upload must map Drive failures, not throw — `[api] [albums] [drive] [upload]`
+- Studio "API unreachable" is session load, not invite POST — `[app] [invite] [api] [session]`
+- ESLint rewrites a unicode arrow to ASCII — `[app] [lint] [unicode]`
 - Jasmine `toContain` can drop a unicode arrow — `[app] [tests] [unicode]`
 - Unsigned song list must not dump leftover Drive takes — `[api] [songs] [drive]`
 - Do not set `ProposalId` before the proposal row exists — `[api] [albums] [ef]`

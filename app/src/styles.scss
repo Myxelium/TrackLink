@@ -142,6 +142,41 @@ audio:focus-visible {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.inclusion-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.track-play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.1rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inclusion-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: end;
+}
+
+.inclusion-choices .text-action {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.72rem;
+}
+
 .work-head {
   display: flex;
   flex-wrap: wrap;

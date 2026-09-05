@@ -111,6 +111,84 @@ public class ListBandSongsTests
         Assert.Equal("Night Shift", Assert.Single(listed!).Name);
     }
 
+    [Fact]
+    public async Task Search_matches_name_or_description_inside_the_band()
+    {
+        await using var db = OpenDb();
+        var owner = new Member { UserIdentifier = Guid.NewGuid(), Username = "ada" };
+        var kindred = new Band { Name = "Kindred", CreatedDate = DateTime.UtcNow, DriveFolderId = "folder-root" };
+        var otherBand = new Band { Name = "Other", CreatedDate = DateTime.UtcNow };
+        var nightShift = new Song
+        {
+            Name = "Night Shift",
+            Description = "Demo take",
+            UploadedByNavigation = owner,
+            Version = 1,
+            PreviousVersion = 0,
+            Url = "https://example.com/night-shift.mp3"
+        };
+        var insideTake = new Song
+        {
+            Name = "in-folder.mp3",
+            Description = "Linked from Google Drive",
+            UploadedByNavigation = owner,
+            Version = 1,
+            PreviousVersion = 0,
+            Url = "gdrive:file-inside"
+        };
+        var leftoverTake = new Song
+        {
+            Name = "bottleneck.mp3",
+            Description = "Linked from Google Drive",
+            UploadedByNavigation = owner,
+            Version = 1,
+            PreviousVersion = 0,
+            Url = "gdrive:file-old-scan"
+        };
+        var otherTake = new Song
+        {
+            Name = "Night Walk",
+            Description = "Solo",
+            UploadedByNavigation = owner,
+            Version = 1,
+            PreviousVersion = 0,
+            Url = "https://example.com/night-walk.mp3"
+        };
+        db.Members.Add(owner);
+        db.Bands.AddRange(kindred, otherBand);
+        db.Songs.AddRange(nightShift, insideTake, leftoverTake, otherTake);
+        await db.SaveChangesAsync();
+        db.SongIdentifiers.AddRange(
+            new SongIdentifier { BandId = kindred.Id, SongId = nightShift.Id },
+            new SongIdentifier { BandId = kindred.Id, SongId = insideTake.Id },
+            new SongIdentifier { BandId = kindred.Id, SongId = leftoverTake.Id },
+            new SongIdentifier { BandId = otherBand.Id, SongId = otherTake.Id });
+        await db.SaveChangesAsync();
+
+        var handler = new ListBandSongs.Handler(db, new FolderDrive(["file-inside"]));
+
+        var byName = await handler.Handle(new ListBandSongs.Query(kindred.Id, owner.Id, "NIGHT"), CancellationToken.None);
+        Assert.Equal("Night Shift", Assert.Single(byName!).Name);
+
+        var byNotes = await handler.Handle(new ListBandSongs.Query(kindred.Id, owner.Id, "demo"), CancellationToken.None);
+        Assert.Equal("Night Shift", Assert.Single(byNotes!).Name);
+
+        var leftoverName = await handler.Handle(
+            new ListBandSongs.Query(kindred.Id, owner.Id, "bottleneck"),
+            CancellationToken.None);
+        Assert.Empty(leftoverName!);
+
+        var otherBandName = await handler.Handle(
+            new ListBandSongs.Query(kindred.Id, owner.Id, "Walk"),
+            CancellationToken.None);
+        Assert.Empty(otherBandName!);
+
+        var blankQuery = await handler.Handle(
+            new ListBandSongs.Query(kindred.Id, owner.Id, "  "),
+            CancellationToken.None);
+        Assert.Equal(["in-folder.mp3", "Night Shift"], blankQuery!.Select(song => song.Name).ToArray());
+    }
+
     private static DatabaseContext OpenDb()
     {
         return new DatabaseContext(new DbContextOptionsBuilder<DatabaseContext>()
@@ -149,6 +227,12 @@ public class ListBandSongsTests
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DriveFileDto>>(
                 insideFileIds.Select(fileId => new DriveFileDto(fileId, fileId, "audio/mpeg")).ToList());
+
+        public Task<IReadOnlyList<DriveFileDto>> ListImageFilesAsync(
+            int memberId,
+            string folderId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DriveFileDto>>([]);
 
         public Task<bool> CanReadFolderAsync(int memberId, string folderId, CancellationToken cancellationToken) =>
             Task.FromResult(true);

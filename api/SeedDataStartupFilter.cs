@@ -11,14 +11,23 @@ public class SeedDataStartupFilter(IConfiguration configuration) : IStartupFilte
     {
         return app =>
         {
-            if (configuration.GetValue<bool>("Seed"))
+            var logger = app.ApplicationServices.GetRequiredService<ILogger<SeedDataStartupFilter>>();
+            try
             {
-                using var scope = app.ApplicationServices.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-                Seed(db);
-            }
+                if (configuration.GetValue<bool>("Seed"))
+                {
+                    using var scope = app.ApplicationServices.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+                    Seed(db);
+                }
 
-            next(app);
+                next(app);
+            }
+            catch (Exception exception)
+            {
+                logger.LogCritical(exception, "Database seed failed");
+                throw;
+            }
         };
     }
 

@@ -10,7 +10,7 @@ export function takeVersionLabel(listedTake: Song, listedTakes: Song[]) {
 
   const previousNumber = previousTake.version || 1;
 
-  return `${versionNumber} ← ${previousNumber}`;
+  return `${versionNumber} \u2190 ${previousNumber}`;
 }
 
 export function takeSourceDateLabel(listedTake: Song) {

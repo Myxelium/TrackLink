@@ -14,6 +14,7 @@ import { StudioSessionFactsComponent } from './studio-session-facts.component';
 import {
   EMPTY,
   catchError,
+  finalize,
   tap
 } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -21,6 +22,7 @@ import { TrackLinkApi } from '../../core/tracklink-api.service';
 import { SessionService } from '../../core/session.service';
 import { GoogleFolderPicker } from '../../core/google-folder-picker.service';
 import {
+  AlbumArtUpload,
   AlbumDetail,
   AlbumProposal,
   AlbumSummary,
@@ -32,6 +34,7 @@ import {
   ProposalReview,
   Song
 } from '../../core/models';
+import { artResolutionWarning } from '../../domains/album/art-vote';
 import { takeSourceDateLabel, takeVersionLabel } from '../../domains/song/take-version-label';
 
 @Component({
@@ -49,31 +52,72 @@ import { takeSourceDateLabel, takeVersionLabel } from '../../domains/song/take-v
 })
 export class StudioPageComponent implements OnInit {
   private readonly trackLinkApi = inject(TrackLinkApi);
+
   private readonly memberSession = inject(SessionService);
+
   private readonly folderPicker = inject(GoogleFolderPicker);
 
   readonly currentMember = signal<Member | null>(null);
+
   readonly bandSongs = signal<Song[]>([]);
+
+  readonly listedTakes = signal<Song[]>([]);
+
   readonly googleDriveStatus = signal<GoogleStatus | null>(null);
+
   readonly driveFiles = signal<DriveFile[]>([]);
+
+  readonly driveImageFiles = signal<DriveFile[]>([]);
+
   readonly driveError = signal<string | null>(null);
+
   readonly loadError = signal<string | null>(null);
+
   readonly playingId = signal<number | null>(null);
+
   readonly focusedStudioPanel = signal<'takes' | 'drive' | 'albums'>('takes');
+
   readonly lastInvite = signal<Invite | null>(null);
+
   readonly albums = signal<AlbumSummary[]>([]);
+
   readonly openAlbum = signal<AlbumDetail | null>(null);
+
   readonly openProposal = signal<AlbumProposal | null>(null);
+
+  readonly artSizeWarning = signal<string | null>(null);
+
+  readonly artUploading = signal(false);
+
+  takeSearchQuery = '';
+
   inviteEmail = '';
+
   inviteRole = 'uploader';
+
   newAlbumName = '';
+
   newAlbumRule = 'all';
+
   proposeSongId: number | null = null;
+
   reviewStartMs: number | null = null;
+
   reviewEndMs: number | null = null;
+
   reviewBody = '';
+
   readonly seekMs = signal<number | null>(null);
+
   readonly seekEpoch = signal(0);
+
+  private readonly apiUnreachableText =
+    'Could not reach the TrackLink API. Start the API on port 5180.';
+
+  private catalogBandId: number | null = null;
+
+  private takeSearchEpoch = 0;
+
   private readonly deck = viewChild(StudioDeckComponent);
 
   ngOnInit() {
@@ -88,7 +132,7 @@ export class StudioPageComponent implements OnInit {
           member: null
         });
 
-        this.loadError.set('Could not reach the TrackLink API. Start the API on port 5180.');
+        this.loadError.set(this.apiUnreachableText);
         this.loadDemoCatalog();
         return EMPTY;
       })
@@ -105,6 +149,36 @@ export class StudioPageComponent implements OnInit {
     this.focusedStudioPanel.set('takes');
   }
 
+  searchTakes(searchQuery: string) {
+    this.takeSearchQuery = searchQuery;
+    const trimmedQuery = searchQuery.trim();
+    const bandId = this.currentBand()?.id ?? this.catalogBandId;
+    const searchEpoch = ++this.takeSearchEpoch;
+
+    if (!trimmedQuery) {
+      this.listedTakes.set(this.bandSongs());
+      return;
+    }
+
+    if (!bandId) {
+      this.listedTakes.set([]);
+      return;
+    }
+
+    this.trackLinkApi.listBandSongs(bandId, trimmedQuery).pipe(
+      tap((foundSongs) => {
+        if (searchEpoch === this.takeSearchEpoch) {
+          this.listedTakes.set(foundSongs);
+        }
+      }),
+      catchError(() => {
+        this.loadError.set('Could not search this band\'s songs.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
   showDrivePanel() {
     this.focusedStudioPanel.set('drive');
   }
@@ -112,6 +186,7 @@ export class StudioPageComponent implements OnInit {
   showAlbumsPanel() {
     this.focusedStudioPanel.set('albums');
     this.loadAlbums();
+    this.loadDriveImageFiles();
   }
 
   canManageAlbums() {
@@ -126,12 +201,14 @@ export class StudioPageComponent implements OnInit {
 
   selectAlbum(album: AlbumSummary) {
     this.openProposal.set(null);
+    this.artSizeWarning.set(null);
     this.loadAlbum(album.id);
   }
 
   closeOpenAlbum() {
     this.openAlbum.set(null);
     this.openProposal.set(null);
+    this.artSizeWarning.set(null);
   }
 
   createAlbum() {
@@ -204,6 +281,143 @@ export class StudioPageComponent implements OnInit {
             : 'Could not open that proposal. The take must already be on this band.'
         );
 
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  castInclusionVote(inclusionVote: { songId: number; choice: string }) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.castInclusionVote(album.id, inclusionVote.songId, inclusionVote.choice).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError(() => {
+        this.loadError.set('Could not record that inclusion vote.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  castNameVote(nameVote: { songId: number | null; name: string }) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.castNameVote(album.id, nameVote.songId, nameVote.name).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError(() => {
+        this.loadError.set('Could not record that title vote.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  castOrderVote(songIds: number[]) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.castOrderVote(album.id, songIds).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError(() => {
+        this.loadError.set('Could not record that track order.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  lockAlbumOrder(orderLocked: boolean) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.lockAlbumOrder(album.id, orderLocked).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError(() => {
+        this.loadError.set('Could not update that track order lock.');
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  castArtVote(driveFileId: string) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.castArtVote(album.id, driveFileId).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError((artFailure: HttpErrorResponse) => {
+        const folderErrorText = artFailure.error?.error;
+
+        this.loadError.set(
+          typeof folderErrorText === 'string' && folderErrorText.length > 0
+            ? folderErrorText
+            : 'Could not record that album art vote.'
+        );
+
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  uploadAlbumArt(coverFile: File) {
+    const album = this.openAlbum();
+
+    if (!album || this.artUploading()) {
+      return;
+    }
+
+    this.artUploading.set(true);
+    this.loadError.set(null);
+    this.trackLinkApi.uploadAlbumArt(album.id, coverFile).pipe(
+      tap((uploadedArt: AlbumArtUpload) => {
+        this.artSizeWarning.set(artResolutionWarning(uploadedArt?.warning));
+        this.loadDriveImageFiles();
+      }),
+      catchError((artFailure: unknown) => {
+        try {
+          this.loadError.set(this.albumArtUploadError(artFailure));
+        } catch {
+          this.loadError.set('Could not upload that album cover.');
+        }
+
+        return EMPTY;
+      }),
+      finalize(() => this.artUploading.set(false))
+    )
+      .subscribe();
+  }
+
+  lockAlbumArt(artLocked: boolean) {
+    const album = this.openAlbum();
+
+    if (!album) {
+      return;
+    }
+
+    this.trackLinkApi.lockAlbumArt(album.id, artLocked).pipe(
+      tap((updatedAlbum) => this.openAlbum.set(updatedAlbum)),
+      catchError(() => {
+        this.loadError.set('Could not update that album art lock.');
         return EMPTY;
       })
     )
@@ -383,9 +597,13 @@ export class StudioPageComponent implements OnInit {
   }
 
   takeCountLabel() {
-    const takeCount = this.bandSongs().length;
+    const takeCount = this.listedTakes().length;
 
     return takeCount === 1 ? '1 take' : `${takeCount} takes`;
+  }
+
+  emptyTakesLabel() {
+    return this.takeSearchQuery.trim() ? 'No takes match that search.' : 'No takes on this band.';
   }
 
   versionLabel(listedTake: Song) {
@@ -469,6 +687,7 @@ export class StudioPageComponent implements OnInit {
           return [...currentSongs, linkedSong];
         });
 
+        this.searchTakes(this.takeSearchQuery);
         this.playTheSong(linkedSong);
       }),
       catchError(() => {
@@ -497,6 +716,7 @@ export class StudioPageComponent implements OnInit {
         });
 
         this.driveFiles.set([]);
+        this.driveImageFiles.set([]);
         this.albums.set([]);
         this.openAlbum.set(null);
         this.openProposal.set(null);
@@ -537,6 +757,30 @@ export class StudioPageComponent implements OnInit {
     return 'Drive OAuth needs Google client credentials on the API.';
   }
 
+  private albumArtUploadError(failure: unknown) {
+    if (failure instanceof HttpErrorResponse) {
+      const body = failure.error as { error?: unknown } | string | null;
+
+      if (body && typeof body === 'object' && typeof body.error === 'string' && body.error.length > 0) {
+        return body.error;
+      }
+
+      if (this.isUnreachableApi(failure)) {
+        return this.apiUnreachableText;
+      }
+
+      if (failure.status === 401 || failure.status === 403) {
+        return 'Sign in with Google again so TrackLink can write album art to Drive.';
+      }
+    }
+
+    return 'Could not upload that album cover.';
+  }
+
+  private isUnreachableApi(failure: unknown) {
+    return failure instanceof HttpErrorResponse && failure.status === 0;
+  }
+
   private applySession(session: GoogleStatus) {
     this.googleDriveStatus.set(session);
     this.currentMember.set(session.member);
@@ -546,8 +790,12 @@ export class StudioPageComponent implements OnInit {
       const bandId = session.member.bands[0]?.id;
 
       if (!bandId) {
+        this.catalogBandId = null;
+        this.takeSearchQuery = '';
         this.bandSongs.set([]);
+        this.listedTakes.set([]);
         this.driveFiles.set([]);
+        this.driveImageFiles.set([]);
         this.albums.set([]);
         this.openAlbum.set(null);
         this.openProposal.set(null);
@@ -585,8 +833,8 @@ export class StudioPageComponent implements OnInit {
 
     this.trackLinkApi.listAlbums(bandId).pipe(
       tap((listedAlbums) => this.albums.set(listedAlbums)),
-      catchError(() => {
-        this.loadError.set('Could not load albums for this band.');
+      catchError((failure: unknown) => {
+        this.loadError.set(this.unreachableApiMessage(failure, 'Could not load albums for this band.'));
         return EMPTY;
       })
     )
@@ -602,8 +850,8 @@ export class StudioPageComponent implements OnInit {
 
         this.openProposal.set(matchingProposal ?? this.openProposal());
       }),
-      catchError(() => {
-        this.loadError.set('Could not open that album.');
+      catchError((failure: unknown) => {
+        this.loadError.set(this.unreachableApiMessage(failure, 'Could not open that album.'));
         return EMPTY;
       })
     )
@@ -611,9 +859,16 @@ export class StudioPageComponent implements OnInit {
   }
 
   private loadBandSongs(bandId: number) {
+    this.catalogBandId = bandId;
     this.loadError.set(null);
     this.trackLinkApi.listBandSongs(bandId).pipe(
-      tap((loadedSongs) => this.bandSongs.set(loadedSongs)),
+      tap((loadedSongs) => {
+        this.bandSongs.set(loadedSongs);
+
+        if (!this.takeSearchQuery.trim()) {
+          this.listedTakes.set(loadedSongs);
+        }
+      }),
       catchError(() => {
         this.loadError.set('Could not load this band\'s songs.');
         return EMPTY;
@@ -673,5 +928,34 @@ export class StudioPageComponent implements OnInit {
       })
     )
       .subscribe();
+  }
+
+  private loadDriveImageFiles() {
+    const listedBand = this.currentBand();
+    const folderId = listedBand?.driveFolderId ?? null;
+    const isConnected = Boolean(this.googleDriveStatus()?.connected);
+
+    if (!listedBand || !isConnected || !folderId) {
+      this.driveImageFiles.set([]);
+      return;
+    }
+
+    this.trackLinkApi.listBandDriveFiles(listedBand.id, 'image').pipe(
+      tap((listedFiles) => this.driveImageFiles.set(listedFiles)),
+      catchError((failure: unknown) => {
+        this.driveImageFiles.set([]);
+
+        if (this.isUnreachableApi(failure)) {
+          this.loadError.set(this.apiUnreachableText);
+        }
+
+        return EMPTY;
+      })
+    )
+      .subscribe();
+  }
+
+  private unreachableApiMessage(failure: unknown, fallback: string) {
+    return this.isUnreachableApi(failure) ? this.apiUnreachableText : fallback;
   }
 }

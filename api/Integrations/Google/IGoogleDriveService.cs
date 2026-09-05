@@ -23,6 +23,11 @@ public interface IGoogleDriveService
         string folderId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<DriveFileDto>> ListImageFilesAsync(
+        int memberId,
+        string folderId,
+        CancellationToken cancellationToken);
+
     Task<bool> CanReadFolderAsync(int memberId, string folderId, CancellationToken cancellationToken);
 
     Task<bool> IsFileInsideFolderAsync(
@@ -37,6 +42,28 @@ public interface IGoogleDriveService
         CancellationToken cancellationToken);
 
     Task<DriveDownload?> DownloadAsync(int memberId, string fileId, CancellationToken cancellationToken);
+
+    Task<DriveFileDto?> UploadFileAsync(
+        int memberId,
+        string folderId,
+        string fileName,
+        string mimeType,
+        Stream content,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<DriveFileDto?>(null);
+
+    Task<DriveFilePresence> GetFilePresenceAsync(
+        int memberId,
+        string fileId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(DriveFilePresence.Unknown);
+}
+
+public enum DriveFilePresence
+{
+    Found,
+    NotFound,
+    Unknown
 }
 
 public sealed class GoogleLoginProfile

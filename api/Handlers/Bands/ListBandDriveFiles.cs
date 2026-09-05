@@ -1,6 +1,7 @@
 using api.Contracts;
 using api.Data;
 using api.Integrations.Google;
+using api.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,13 +9,19 @@ namespace api.Handlers.Bands;
 
 public static class ListBandDriveFiles
 {
-    public record Query(int BandId, int MemberId) : IRequest<DriveListResult>;
+    public record Query(int BandId, int MemberId, string? Kind = null) : IRequest<DriveListResult>;
 
     public class Handler(DatabaseContext db, IGoogleDriveService googleDrive)
         : IRequestHandler<Query, DriveListResult>
     {
         public async Task<DriveListResult> Handle(Query request, CancellationToken cancellationToken)
         {
+            var listKind = DriveFileKinds.Normalize(request.Kind);
+            if (listKind is null)
+            {
+                return new DriveListResult("invalid_kind", []);
+            }
+
             var membership = await db.BandMembers
                 .Include(bandMember => bandMember.Band)
                 .AsNoTracking()
@@ -34,7 +41,9 @@ public static class ListBandDriveFiles
 
             try
             {
-                var files = await googleDrive.ListAudioFilesAsync(request.MemberId, folderId, cancellationToken);
+                var files = listKind == DriveFileKinds.Image
+                    ? await googleDrive.ListImageFilesAsync(request.MemberId, folderId, cancellationToken)
+                    : await googleDrive.ListAudioFilesAsync(request.MemberId, folderId, cancellationToken);
                 return new DriveListResult(null, files);
             }
             catch (DriveFolderDeniedException)

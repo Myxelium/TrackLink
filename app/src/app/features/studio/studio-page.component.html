@@ -109,8 +109,15 @@
 
         <app-studio-album-work
           (archiveRequested)="archiveAlbum()"
+          (artFileRequested)="uploadAlbumArt($event)"
+          (artLockRequested)="lockAlbumArt($event)"
+          (artRequested)="castArtVote($event)"
           (decisionRequested)="decideProposal($event)"
           (deskRequested)="closeOpenAlbum()"
+          (inclusionRequested)="castInclusionVote($event)"
+          (nameRequested)="castNameVote($event)"
+          (orderLockRequested)="lockAlbumOrder($event)"
+          (orderRequested)="castOrderVote($event)"
           (markRequested)="markReviewBound($event)"
           (proposalChosen)="openProposalPane($event)"
           (proposalClosed)="closeProposalPane()"
@@ -126,6 +133,9 @@
           [album]="openAlbum()"
           [bandSongs]="bandSongs()"
           [canManage]="canManageAlbums()"
+          [artSizeWarning]="artSizeWarning()"
+          [artUploading]="artUploading()"
+          [driveImageFiles]="driveImageFiles()"
           [currentMemberId]="currentMember()?.id ?? null"
           [isOwner]="isBandOwner()"
           [playingId]="playingId()"
@@ -144,6 +154,19 @@
             <p>{{ takeCountLabel() }}</p>
           </header>
 
+          <label class="take-search">
+            <span>Search</span>
+
+            <input
+              (input)="searchTakes(takeSearchField.value)"
+              #takeSearchField
+              [value]="takeSearchQuery"
+              autocomplete="off"
+              placeholder="Name or notes"
+              type="search"
+            >
+          </label>
+
           @if (loadError(); as message) {
             <p class="banner" role="alert">{{ message }}</p>
           }
@@ -155,7 +178,7 @@
               <span>Store</span>
             </div>
 
-            @for (song of bandSongs(); track song.id) {
+            @for (song of listedTakes(); track song.id) {
               <button
                 (click)="playTheSong(song)"
                 [attr.title]="song.contentMd5 || null"
@@ -175,7 +198,7 @@
                 <span class="mono">{{ song.storageKind }}</span>
               </button>
             } @empty {
-              <p class="empty">No takes on this band.</p>
+              <p class="empty">{{ emptyTakesLabel() }}</p>
             }
           </div>
         </section>

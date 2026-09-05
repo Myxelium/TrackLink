@@ -4,6 +4,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
@@ -11,6 +12,7 @@ import {
   catchError,
   tap
 } from 'rxjs';
+import { AcceptInviteResult } from '../../core/models';
 import { TrackLinkApi } from '../../core/tracklink-api.service';
 
 @Component({
@@ -21,11 +23,15 @@ import { TrackLinkApi } from '../../core/tracklink-api.service';
 })
 export class JoinPageComponent implements OnInit {
   private readonly trackLinkApi = inject(TrackLinkApi);
+
   private readonly route = inject(ActivatedRoute);
 
   email = '';
+
   code = '';
+
   readonly notice = signal<string | null>(null);
+
   readonly accepted = signal(false);
 
   ngOnInit() {
@@ -48,25 +54,41 @@ export class JoinPageComponent implements OnInit {
   acceptInvite() {
     this.notice.set(null);
     this.trackLinkApi.acceptInvite(this.email.trim(), this.code.trim()).pipe(
-      tap((result) => {
-        if (result.accepted) {
-          this.accepted.set(true);
-          this.notice.set('You are in the band. Open the studio.');
-          return;
-        }
-
-        if (result.needsLogin && result.loginUrl) {
-          window.location.assign(result.loginUrl);
-          return;
-        }
-
-        this.notice.set(result.error || 'Could not accept that invite.');
-      }),
-      catchError(() => {
-        this.notice.set('Could not accept that invite.');
+      tap((acceptResult) => this.applyAcceptResult(acceptResult)),
+      catchError((acceptError: unknown) => {
+        this.applyAcceptResult(readAcceptResult(acceptError));
         return EMPTY;
       })
     )
       .subscribe();
   }
+
+  openLoginUrl(loginUrl: string) {
+    window.location.assign(loginUrl);
+  }
+
+  private applyAcceptResult(acceptResult: AcceptInviteResult | null) {
+    if (acceptResult?.accepted) {
+      this.accepted.set(true);
+      this.notice.set('You are in the band. Open the studio.');
+      return;
+    }
+
+    if (acceptResult?.needsLogin && acceptResult.loginUrl) {
+      this.openLoginUrl(acceptResult.loginUrl);
+      return;
+    }
+
+    this.notice.set(acceptResult?.error || 'Could not accept that invite.');
+  }
+}
+
+function readAcceptResult(acceptError: unknown): AcceptInviteResult | null {
+  if (!(acceptError instanceof HttpErrorResponse) ||
+    !acceptError.error ||
+    typeof acceptError.error !== 'object') {
+    return null;
+  }
+
+  return acceptError.error as AcceptInviteResult;
 }

@@ -28,7 +28,8 @@ Songs are metadata rows (name, version, storage pointer). Audio bytes are not st
 - **Method:** GET
 - **Path:** `/api/bands/{bandId}/songs`
 - **Authentication:** None. Session cookie is used when present so Drive takes outside the band folder can be omitted.
-- **Notes:** URL takes always list. `gdrive` takes list only when the caller is signed in, the band folder is set, and the file sits under that folder. SQL rows stay; leftover full-Drive links are hidden, not deleted.
+- **Query:** `q` (optional). Case-insensitive match on song name or description. Blank or omitted `q` returns the full visible catalog. Search stays on this band's SQL rows — it does not crawl Drive.
+- **Notes:** URL takes always list. `gdrive` takes list only when the caller is signed in, the band folder is set, and the file sits under that folder. SQL rows stay; leftover full-Drive links are hidden, not deleted. Hidden leftovers stay hidden even when `q` matches their name.
 
 ```json
 [{ "id": 1, "name": "Demo Take", "description": "...", "version": 1, "previousVersion": 0, "uploadedBy": 1, "storageKind": "url", "contentMd5": null, "sourceModifiedAt": null }]

@@ -127,6 +127,12 @@ public class AddBandDriveSongTests
             Task.FromResult<IReadOnlyList<DriveFileDto>>(
                 insideFileIds.Select(fileId => new DriveFileDto(fileId, fileId, "audio/mpeg")).ToList());
 
+        public Task<IReadOnlyList<DriveFileDto>> ListImageFilesAsync(
+            int memberId,
+            string folderId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DriveFileDto>>([]);
+
         public Task<bool> CanReadFolderAsync(int memberId, string folderId, CancellationToken cancellationToken) =>
             Task.FromResult(true);
 

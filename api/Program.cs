@@ -4,8 +4,27 @@ using api.Data;
 using api.Integrations.Google;
 using api.Services;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var logsDirectory = Path.Combine(builder.Environment.ContentRootPath, "logs");
+Directory.CreateDirectory(logsDirectory);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        Path.Combine(logsDirectory, "tracklink-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14,
+        shared: true)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -51,8 +70,55 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+        if (context.Response.StatusCode >= 500)
+        {
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("api.Http");
+            logger.LogError(
+                "HTTP {StatusCode} {Method} {Path}",
+                context.Response.StatusCode,
+                context.Request.Method,
+                context.Request.Path.Value);
+        }
+    }
+    catch (Exception exception)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("api.Http");
+        logger.LogError(
+            exception,
+            "Unhandled exception {Method} {Path}",
+            context.Request.Method,
+            context.Request.Path.Value);
+        if (context.Response.HasStarted)
+        {
+            throw;
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new { error = "Something went wrong. Try again." });
+    }
+});
+
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
 
-app.Run();
+try
+{
+    Log.Information("TrackLink API starting");
+    app.Run();
+}
+catch (Exception exception)
+{
+    Log.Fatal(exception, "TrackLink API terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}

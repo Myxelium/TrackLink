@@ -43,4 +43,33 @@ describe('JoinPageComponent', () => {
     expect(pageComponent.accepted()).toBeTrue();
     httpTestingController.verify();
   });
+
+  it('sends an unsigned invitee to Google login from a 401 body', () => {
+    const componentFixture = TestBed.createComponent(JoinPageComponent);
+    const pageComponent = componentFixture.componentInstance;
+    const httpTestingController = TestBed.inject(HttpTestingController);
+    const assignSpy = spyOn(pageComponent, 'openLoginUrl');
+
+    pageComponent.email = 'kit@example.com';
+    pageComponent.code = 'abc12';
+    pageComponent.acceptInvite();
+
+    const acceptRequest = httpTestingController.expectOne('/api/invites/accept');
+
+    acceptRequest.flush({
+      accepted: false,
+      needsLogin: true,
+      loginUrl: '/api/auth/google/login?invite=abc12',
+      error: null,
+      bandId: 9
+    }, {
+      status: 401,
+      statusText: 'Unauthorized'
+    });
+
+    expect(assignSpy).toHaveBeenCalledWith('/api/auth/google/login?invite=abc12');
+    expect(pageComponent.accepted()).toBeFalse();
+    expect(pageComponent.notice()).toBeNull();
+    httpTestingController.verify();
+  });
 });

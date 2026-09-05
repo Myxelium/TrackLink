@@ -9,18 +9,28 @@ public class MigrateDatabaseStartupFilter(IConfiguration configuration) : IStart
     {
         return app =>
         {
-            var shouldMigrate = configuration.GetValue<bool>("Migrate");
-            
-            using var scope = app.ApplicationServices.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
-            
-            if (shouldMigrate)
+            var logger = app.ApplicationServices.GetRequiredService<ILogger<MigrateDatabaseStartupFilter>>();
+            try
             {
-                context.Database.Migrate();
-            }
+                var shouldMigrate = configuration.GetValue<bool>("Migrate");
 
-            // Continue with the next middleware
-            next(app);
+                using var scope = app.ApplicationServices.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+
+                if (shouldMigrate)
+                {
+                    logger.LogInformation("Applying database migrations");
+                    context.Database.Migrate();
+                    logger.LogInformation("Database migrations applied");
+                }
+
+                next(app);
+            }
+            catch (Exception exception)
+            {
+                logger.LogCritical(exception, "Database migration failed");
+                throw;
+            }
         };
     }
 }

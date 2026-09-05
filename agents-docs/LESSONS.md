@@ -4,6 +4,30 @@ Full lesson bodies. Session start reads `LESSONS-INDEX.md` and opens only matchi
 
 ## Lessons
 
+### Agent-launched `dotnet run` dies on shell abort
+
+`[api] [process] [cursor] [upload]`
+
+A Cursor agent foreground `dotnet run` is SIGTERMed when that shell is aborted (`Application is shutting down...`, no ERR/FTL). Album art then looks like a crash: 403 `needs_reauth` is handled, the user re-auths, then :5180 is gone and `ng serve` logs `ECONNREFUSED`. Start with `bash api/start-dev.sh` (`setsid`) so the host outlives the agent turn.
+
+### Album art upload must map Drive failures, not throw
+
+`[api] [albums] [drive] [upload]`
+
+`POST /api/albums/{id}/art` talks to Drive write. A stale read-only token (OAuth widened to full Drive) comes back as 403 / `invalid_grant`, not a process crash. Catch Drive/token/image-decode exceptions in the upload handler, log them, and return JSON `needs_reauth` (403) or `upload_failed` (409). Studio must `catchError` the POST and show the banner — do not leave `artUploading` stuck or read `error.error` on an HTML 500 body.
+
+### Studio "API unreachable" is session load, not invite POST
+
+`[app] [invite] [api] [session]`
+
+`Could not reach the TrackLink API. Start the API on port 5180.` is set only when `GET /api/auth/me` fails in studio `ngOnInit`. Invite create/accept have their own banners. `/api/auth/me` returns 200 even when unsigned, so that banner means the Angular `/api` proxy could not reach `:5180` (process killed by a later `fuser -k` / aborted `dotnet run`, not an invite handler crash). `POST /api/invites/accept` can return 401 with `needsLogin` + `loginUrl`; HttpClient treats that as an error, so the join page must read the 401 body instead of showing a generic accept failure.
+
+### ESLint rewrites a unicode arrow to ASCII
+
+`[app] [lint] [unicode]`
+
+`npm run lint:fix` turned `←` into `<-` in `take-version-label.ts`. Keep the glyph as `\u2190` in source and specs so style fixers cannot replace it.
+
 ### Jasmine `toContain` can drop a unicode arrow
 
 `[app] [tests] [unicode]`

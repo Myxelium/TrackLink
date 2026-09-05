@@ -43,16 +43,19 @@ public class BandController(ISender mediator, IMemberSession memberSession) : Co
     }
 
     [HttpGet("{bandId:int}/songs")]
-    public async Task<IActionResult> Songs(int bandId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Songs(int bandId, [FromQuery] string? q, CancellationToken cancellationToken)
     {
         var songs = await mediator.Send(
-            new ListBandSongs.Query(bandId, memberSession.GetMemberId(HttpContext)),
+            new ListBandSongs.Query(bandId, memberSession.GetMemberId(HttpContext), q),
             cancellationToken);
         return songs is null ? NotFound() : Ok(songs);
     }
 
     [HttpGet("{bandId:int}/drive/files")]
-    public async Task<IActionResult> DriveFiles(int bandId, CancellationToken cancellationToken)
+    public async Task<IActionResult> DriveFiles(
+        int bandId,
+        [FromQuery] string? kind,
+        CancellationToken cancellationToken)
     {
         var memberId = memberSession.GetMemberId(HttpContext);
         if (memberId is null)
@@ -60,10 +63,13 @@ public class BandController(ISender mediator, IMemberSession memberSession) : Co
             return Unauthorized(new { error = "Sign in with Google first" });
         }
 
-        var result = await mediator.Send(new ListBandDriveFiles.Query(bandId, memberId.Value), cancellationToken);
+        var result = await mediator.Send(
+            new ListBandDriveFiles.Query(bandId, memberId.Value, kind),
+            cancellationToken);
         return result.Error switch
         {
             "not_in_band" => NotFound(),
+            "invalid_kind" => BadRequest(new { error = "kind must be audio or image" }),
             "folder_missing" => Conflict(new { error = "Band Drive folder is not set" }),
             "folder_denied" => StatusCode(
                 StatusCodes.Status403Forbidden,

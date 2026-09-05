@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   AcceptInviteResult,
+  AlbumArtUpload,
   AlbumDetail,
   AlbumProposal,
   AlbumSummary,
@@ -30,12 +31,18 @@ export class TrackLinkApi {
     return this.httpClient.get<GoogleStatus>('/api/auth/me');
   }
 
-  listBandSongs(bandId: number) {
-    return this.httpClient.get<Song[]>(`/api/bands/${bandId}/songs`);
+  listBandSongs(bandId: number, searchQuery = '') {
+    const trimmedQuery = searchQuery.trim();
+
+    return this.httpClient.get<Song[]>(`/api/bands/${bandId}/songs`, {
+      params: trimmedQuery ? { q: trimmedQuery } : {}
+    });
   }
 
-  listBandDriveFiles(bandId: number) {
-    return this.httpClient.get<DriveFile[]>(`/api/bands/${bandId}/drive/files`);
+  listBandDriveFiles(bandId: number, listedKind: 'audio' | 'image' = 'audio') {
+    return this.httpClient.get<DriveFile[]>(`/api/bands/${bandId}/drive/files`, {
+      params: listedKind === 'image' ? { kind: listedKind } : {}
+    });
   }
 
   setBandDriveFolder(bandId: number, folderId: string, name: string | null) {
@@ -96,6 +103,52 @@ export class TrackLinkApi {
     body: { name?: string; archived?: boolean; approvalRule?: string }
   ) {
     return this.httpClient.patch<AlbumDetail>(`/api/albums/${albumId}`, body);
+  }
+
+  castInclusionVote(albumId: number, songId: number, inclusionChoice: string) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/inclusion-votes`, {
+      songId,
+      choice: inclusionChoice
+    });
+  }
+
+  castNameVote(albumId: number, songId: number | null, listedName: string) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/name-votes`, {
+      songId,
+      name: listedName
+    });
+  }
+
+  castOrderVote(albumId: number, songIds: number[]) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/order-votes`, {
+      songIds
+    });
+  }
+
+  lockAlbumOrder(albumId: number, orderLocked: boolean) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/order-lock`, {
+      locked: orderLocked
+    });
+  }
+
+  castArtVote(albumId: number, driveFileId: string) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/art-votes`, {
+      driveFileId
+    });
+  }
+
+  lockAlbumArt(albumId: number, artLocked: boolean) {
+    return this.httpClient.put<AlbumDetail>(`/api/albums/${albumId}/art-lock`, {
+      locked: artLocked
+    });
+  }
+
+  uploadAlbumArt(albumId: number, coverFile: File) {
+    const body = new FormData();
+
+    body.append('file', coverFile, coverFile.name);
+
+    return this.httpClient.post<AlbumArtUpload>(`/api/albums/${albumId}/art`, body);
   }
 
   proposeAlbumSong(albumId: number, songId: number) {

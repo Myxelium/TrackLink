@@ -95,6 +95,59 @@ export interface AlbumSummary {
   openProposalCount: number;
 }
 
+export interface InclusionTally {
+  myChoice: string | null;
+  inCount: number;
+  outCount: number;
+  abstainCount: number;
+}
+
+export interface NameCandidate {
+  name: string;
+  voteCount: number;
+  isMine: boolean;
+}
+
+export interface NameContest {
+  myName: string | null;
+  candidates: NameCandidate[];
+}
+
+export interface OrderTrackTally {
+  myRank: number | null;
+  averageRank: number | null;
+  consensusPosition: number | null;
+}
+
+export interface OrderContest {
+  locked: boolean;
+  voteCount: number;
+  mySongIds: number[] | null;
+}
+
+export interface ArtCandidate {
+  driveFileId: string;
+  voteCount: number;
+  isMine: boolean;
+}
+
+export interface ArtContest {
+  locked: boolean;
+  appliedDriveFileId: string | null;
+  voteCount: number;
+  myDriveFileId: string | null;
+  candidates: ArtCandidate[];
+}
+
+export interface AlbumArtUpload {
+  driveFileId: string;
+  name: string;
+  mimeType: string | null;
+  width: number | null;
+  height: number | null;
+  warning: string | null;
+}
+
 export interface AlbumTrack {
   id: number;
   songId: number;
@@ -102,6 +155,9 @@ export interface AlbumTrack {
   version: number | null;
   sortOrder: number;
   addedAt: string;
+  inclusion?: InclusionTally;
+  names?: NameContest;
+  order?: OrderTrackTally;
 }
 
 export interface ProposalDecision {
@@ -150,4 +206,7 @@ export interface AlbumDetail {
   approvalRule: string;
   tracks: AlbumTrack[];
   proposals: AlbumProposal[];
+  names?: NameContest;
+  order?: OrderContest;
+  art?: ArtContest;
 }

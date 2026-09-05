@@ -205,21 +205,277 @@
       }
 
       <header class="block-head">
+        <h2>Album title</h2>
+        <p>Straw poll - does not rename the album</p>
+      </header>
+
+      <div class="name-contest">
+        <div class="name-choices">
+          @for (candidate of albumNames().candidates; track candidate.name) {
+            <button
+              (click)="requestAlbumName(candidate.name)"
+              [class.is-lead]="candidate.isMine"
+              [disabled]="!canVoteNames()"
+              class="text-action"
+              type="button"
+            >{{ candidate.name }} {{ candidate.voteCount }}</button>
+          }
+        </div>
+
+        <form (ngSubmit)="requestAlbumName()" class="name-propose">
+          <label>
+            <span>Suggest a title</span>
+
+            <input
+              (ngModelChange)="draftAlbumName = $event"
+              [ngModel]="draftAlbumName"
+              maxlength="50"
+              name="draftAlbumName"
+            >
+          </label>
+
+          <button
+            [disabled]="!canSubmitAlbumName()"
+            class="text-action is-lead"
+            type="submit"
+          >Propose</button>
+        </form>
+      </div>
+
+      <header class="block-head">
+        <h2>Album art</h2>
+        <p>{{ artStatusLabel() }}</p>
+      </header>
+
+      <div class="name-contest art-contest">
+        @if (artPreviewUrl(); as previewUrl) {
+          <img
+            [alt]="artLabel(albumArt().appliedDriveFileId ?? 'Album cover')"
+            [src]="previewUrl"
+            class="art-preview"
+          >
+        }
+
+        <div class="name-choices">
+          @for (choice of artChoices(); track choice.driveFileId) {
+            <button
+              (click)="requestArt(choice.driveFileId)"
+              [class.is-lead]="choice.isMine"
+              [disabled]="!canVoteArt()"
+              class="text-action art-pick"
+              type="button"
+            >
+              <img
+                [alt]="choice.label"
+                [src]="choice.previewUrl"
+                class="art-thumb"
+              >
+
+              <span>{{ artChoiceLabel(choice) }}</span>
+            </button>
+          }
+        </div>
+
+        @if (shownArtWarning(); as warningText) {
+          <p class="art-warning">{{ warningText }}</p>
+        }
+
+        @if (canVoteArt()) {
+          <label class="art-upload">
+            <span>Upload a cover</span>
+
+            <input
+              (change)="requestArtUpload($event)"
+              [disabled]="!canUploadArt()"
+              accept="image/*"
+              type="file"
+            >
+          </label>
+        }
+
+        @if (canVoteArt() || canLockArt()) {
+          <form (ngSubmit)="requestArt()" class="name-propose">
+            <label>
+              <span>Image in the band folder</span>
+
+              @if (driveImageFiles().length > 0) {
+                <select
+                  (ngModelChange)="draftArtFileId = $event"
+                  [ngModel]="draftArtFileId"
+                  name="draftArtFilePick"
+                >
+                  <option value="">Choose a cover</option>
+
+                  @for (driveFile of driveImageFiles(); track driveFile.id) {
+                    <option [value]="driveFile.id">{{ driveFile.name }}</option>
+                  }
+                </select>
+              }
+
+              <input
+                (ngModelChange)="draftArtFileId = $event"
+                [ngModel]="draftArtFileId"
+                maxlength="128"
+                name="draftArtFileId"
+                placeholder="Drive file id"
+              >
+            </label>
+
+            <button
+              [disabled]="!canSubmitArt()"
+              class="text-action is-lead"
+              type="submit"
+            >Vote</button>
+          </form>
+        }
+
+        @if (canLockArt() || canUnlockArt()) {
+          <div class="work-actions art-actions">
+            @if (canLockArt()) {
+              <button
+                (click)="requestArtLock()"
+                class="text-action"
+                type="button"
+              >Apply art</button>
+            }
+
+            @if (canUnlockArt()) {
+              <button
+                (click)="requestArtUnlock()"
+                class="text-action"
+                type="button"
+              >Unlock art</button>
+            }
+          </div>
+        }
+      </div>
+
+      <header class="block-head">
+        <h2>Track order</h2>
+        <p>{{ orderStatusLabel() }}</p>
+      </header>
+
+      <div class="sheet">
+        @for (track of rankedTracks(); track track.id) {
+          <div class="sheet-row order-row">
+            <span class="take-name">{{ track.songName }}</span>
+            <span class="mono">{{ orderLabel(track) }}</span>
+
+            @if (canVoteOrder()) {
+              <div class="order-moves">
+                <button
+                  (click)="moveOrderTake(track.songId, -1)"
+                  class="text-action"
+                  type="button"
+                >Up</button>
+
+                <button
+                  (click)="moveOrderTake(track.songId, 1)"
+                  class="text-action"
+                  type="button"
+                >Down</button>
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="empty">Admit a take before ranking the record.</p>
+        }
+      </div>
+
+      @if (canVoteOrder() || canLockOrder() || canUnlockOrder()) {
+        <div class="work-actions order-actions">
+          @if (canVoteOrder()) {
+            <button
+              (click)="requestOrder()"
+              [disabled]="!canSubmitOrder()"
+              class="text-action is-lead"
+              type="button"
+            >Save ranking</button>
+          }
+
+          @if (canLockOrder()) {
+            <button
+              (click)="requestOrderLock()"
+              class="text-action"
+              type="button"
+            >Lock order</button>
+          }
+
+          @if (canUnlockOrder()) {
+            <button
+              (click)="requestOrderUnlock()"
+              class="text-action"
+              type="button"
+            >Unlock order</button>
+          }
+        </div>
+      }
+
+      <header class="block-head">
         <h2>On the album</h2>
         <p>{{ openAlbum.tracks.length === 1 ? '1 take' : openAlbum.tracks.length + ' takes' }}</p>
       </header>
 
       <div class="sheet">
         @for (track of openAlbum.tracks; track track.id) {
-          <button
-            (click)="trackChosen.emit(track)"
-            [class.is-armed]="playingId() === track.songId"
-            class="sheet-row take-row track-row"
-            type="button"
-          >
-            <span class="take-name">{{ track.songName }}</span>
-            <span class="mono">v{{ track.version || 1 }}</span>
-          </button>
+          <div class="sheet-row inclusion-row">
+            <div class="track-main">
+              <button
+                (click)="trackChosen.emit(track)"
+                [class.is-armed]="playingId() === track.songId"
+                class="take-row track-play"
+                type="button"
+              >
+                <span class="take-name">{{ track.songName }}</span>
+                <span class="mono">v{{ track.version || 1 }}</span>
+              </button>
+
+              <div class="inclusion-choices">
+                @for (choice of inclusionChoices; track choice) {
+                  <button
+                    (click)="inclusionRequested.emit({ songId: track.songId, choice })"
+                    [class.is-lead]="isMyInclusion(track, choice)"
+                    [disabled]="!canVoteInclusion()"
+                    class="text-action"
+                    type="button"
+                  >{{ inclusionLabel(choice) }} {{ inclusionCount(track, choice) }}</button>
+                }
+              </div>
+            </div>
+
+            <div class="name-contest">
+              <div class="name-choices">
+                @for (candidate of trackNames(track).candidates; track candidate.name) {
+                  <button
+                    (click)="requestSongName(track.songId, candidate.name)"
+                    [class.is-lead]="candidate.isMine"
+                    [disabled]="!canVoteNames()"
+                    class="text-action"
+                    type="button"
+                  >{{ candidate.name }} {{ candidate.voteCount }}</button>
+                }
+              </div>
+
+              <form (ngSubmit)="requestSongName(track.songId)" class="name-propose">
+                <label>
+                  <span>Suggest a title</span>
+
+                  <input
+                    (ngModelChange)="setDraftSongName(track.songId, $event)"
+                    [ngModel]="draftSongName(track.songId)"
+                    [name]="'draftSongName-' + track.songId"
+                    maxlength="50"
+                  >
+                </label>
+
+                <button
+                  [disabled]="!canSubmitSongName(track.songId)"
+                  class="text-action is-lead"
+                  type="submit"
+                >Propose</button>
+              </form>
+            </div>
+          </div>
         } @empty {
           <p class="empty">Nothing on this record yet. Choose a take above.</p>
         }

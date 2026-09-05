@@ -4,12 +4,14 @@ using api.Contracts;
 using api.Data;
 using api.Data.Entities;
 using api.Services;
+using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Requests;
 using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
+using Google.Apis.Upload;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -24,7 +26,7 @@ public class GoogleDriveService(
 
     private static readonly string[] Scopes =
     [
-        DriveService.Scope.DriveReadonly,
+        DriveService.Scope.Drive,
         "openid",
         "email",
         "profile"
@@ -149,9 +151,27 @@ public class GoogleDriveService(
         return account?.AccessToken;
     }
 
-    public async Task<IReadOnlyList<DriveFileDto>> ListAudioFilesAsync(
+    public Task<IReadOnlyList<DriveFileDto>> ListAudioFilesAsync(
         int memberId,
         string folderId,
+        CancellationToken cancellationToken)
+    {
+        return ListFolderFilesAsync(memberId, folderId, "audio/", "audio", cancellationToken);
+    }
+
+    public Task<IReadOnlyList<DriveFileDto>> ListImageFilesAsync(
+        int memberId,
+        string folderId,
+        CancellationToken cancellationToken)
+    {
+        return ListFolderFilesAsync(memberId, folderId, "image/", "image", cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<DriveFileDto>> ListFolderFilesAsync(
+        int memberId,
+        string folderId,
+        string mimePrefix,
+        string fallbackName,
         CancellationToken cancellationToken)
     {
         var service = await CreateDriveServiceAsync(memberId, cancellationToken);
@@ -209,9 +229,9 @@ public class GoogleDriveService(
                 }
 
                 if (file.MimeType is not null &&
-                    file.MimeType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase))
+                    file.MimeType.StartsWith(mimePrefix, StringComparison.OrdinalIgnoreCase))
                 {
-                    listed.Add(new DriveFileDto(file.Id, file.Name ?? "audio", file.MimeType));
+                    listed.Add(new DriveFileDto(file.Id, file.Name ?? fallbackName, file.MimeType));
                 }
             }
         }
@@ -352,10 +372,124 @@ public class GoogleDriveService(
                 ContentType = string.IsNullOrWhiteSpace(meta.MimeType) ? "audio/mpeg" : meta.MimeType
             };
         }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Drive download failed for {FileId}", fileId);
+                return null;
+            }
+        }
+
+    public async Task<DriveFileDto?> UploadFileAsync(
+        int memberId,
+        string folderId,
+        string fileName,
+        string mimeType,
+        Stream content,
+        CancellationToken cancellationToken)
+    {
+        DriveService? service;
+        try
+        {
+            service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        }
+        catch (Exception ex) when (DriveAuthErrors.IsDriveAuthFailure(ex))
+        {
+            logger.LogWarning(ex, "Drive client create needs a new Google login for upload under {FolderId}", folderId);
+            throw new DriveWriteDeniedException();
+        }
+
+        if (service is null)
+        {
+            if (IsConfigured && await HasTokensAsync(memberId, cancellationToken))
+            {
+                throw new DriveWriteDeniedException();
+            }
+
+            return null;
+        }
+
+        var metadata = new global::Google.Apis.Drive.v3.Data.File
+        {
+            Name = fileName,
+            Parents = [folderId]
+        };
+
+        try
+        {
+            var request = service.Files.Create(metadata, content, mimeType);
+            request.Fields = "id, name, mimeType";
+            request.SupportsAllDrives = true;
+            var progress = await request.UploadAsync(cancellationToken);
+            if (progress.Exception is not null && DriveAuthErrors.IsDriveAuthFailure(progress.Exception))
+            {
+                throw new DriveWriteDeniedException();
+            }
+
+            if (progress.Status != UploadStatus.Completed || request.ResponseBody is null)
+            {
+                logger.LogWarning(
+                    "Drive image upload did not complete under {FolderId}: {Status}",
+                    folderId,
+                    progress.Status);
+                return null;
+            }
+
+            var file = request.ResponseBody;
+            if (string.IsNullOrWhiteSpace(file.Id))
+            {
+                return null;
+            }
+
+            return new DriveFileDto(file.Id, file.Name ?? fileName, file.MimeType ?? mimeType);
+        }
+        catch (DriveWriteDeniedException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (DriveAuthErrors.IsDriveAuthFailure(ex))
+        {
+            logger.LogWarning(ex, "Drive image upload needs a new Google login under {FolderId}", folderId);
+            throw new DriveWriteDeniedException();
+        }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Drive download failed for {FileId}", fileId);
+            logger.LogWarning(ex, "Drive image upload failed under {FolderId}", folderId);
             return null;
+        }
+    }
+
+    public async Task<DriveFilePresence> GetFilePresenceAsync(
+        int memberId,
+        string fileId,
+        CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        if (service is null)
+        {
+            return DriveFilePresence.Unknown;
+        }
+
+        try
+        {
+            var request = service.Files.Get(fileId);
+            request.Fields = "id, trashed";
+            request.SupportsAllDrives = true;
+            var file = await request.ExecuteAsync(cancellationToken);
+            if (file is null || string.IsNullOrWhiteSpace(file.Id) || file.Trashed == true)
+            {
+                return DriveFilePresence.NotFound;
+            }
+
+            return DriveFilePresence.Found;
+        }
+        catch (GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return DriveFilePresence.NotFound;
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation(ex, "Drive file presence check failed for {FileId}", fileId);
+            return DriveFilePresence.Unknown;
         }
     }
 
@@ -400,8 +534,16 @@ public class GoogleDriveService(
         var credential = new UserCredential(flow, $"member:{memberId}", token);
         if (account.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(1))
         {
-            if (!await credential.RefreshTokenAsync(cancellationToken))
+            try
             {
+                if (!await credential.RefreshTokenAsync(cancellationToken))
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Drive token refresh failed for member {MemberId}", memberId);
                 return null;
             }
 
@@ -470,3 +612,32 @@ public class GoogleDriveService(
 }
 
 public sealed class DriveFolderDeniedException : Exception;
+
+public sealed class DriveWriteDeniedException : Exception;
+
+public static class DriveAuthErrors
+{
+    public static bool IsDriveAuthFailure(Exception exception)
+    {
+        if (exception is DriveWriteDeniedException or TokenResponseException)
+        {
+            return true;
+        }
+
+        if (exception is GoogleApiException googleException)
+        {
+            if (googleException.HttpStatusCode is
+                System.Net.HttpStatusCode.Unauthorized or
+                System.Net.HttpStatusCode.Forbidden)
+            {
+                return true;
+            }
+        }
+
+        var text = exception.Message ?? string.Empty;
+        return text.Contains("insufficient", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("ACCESS_TOKEN_SCOPE", StringComparison.OrdinalIgnoreCase) ||
+               text.Contains("unauthenticated", StringComparison.OrdinalIgnoreCase);
+    }
+}

@@ -269,13 +269,48 @@ namespace api.Data
 
             modelBuilder.Entity<Vote>(entity =>
             {
-                entity.HasKey(e => new { e.Id, e.MemberId, e.SongId });
+                entity.HasKey(e => e.Id);
 
                 entity.ToTable("Vote");
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
+                entity.Property(e => e.Kind)
+                    .HasMaxLength(20)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Choice)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Subject).HasMaxLength(128);
+
                 entity.Property(e => e.Comment).HasMaxLength(50);
+
+                entity.HasIndex(e => new { e.AlbumId, e.MemberId, e.SongId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Vote_Inclusion")
+                    .HasFilter("[Kind] = 'inclusion' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                entity.HasIndex(e => new { e.AlbumId, e.MemberId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Vote_AlbumName")
+                    .HasFilter("[Kind] = 'album_name'");
+
+                entity.HasIndex(e => new { e.AlbumId, e.MemberId, e.SongId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Vote_SongName")
+                    .HasFilter("[Kind] = 'song_name' AND [SongId] IS NOT NULL");
+
+                entity.HasIndex(e => new { e.AlbumId, e.MemberId, e.SongId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Vote_Order")
+                    .HasFilter("[Kind] = 'order' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                entity.HasIndex(e => new { e.AlbumId, e.MemberId })
+                    .IsUnique()
+                    .HasDatabaseName("IX_Vote_Art")
+                    .HasFilter("[Kind] = 'art' AND [AlbumId] IS NOT NULL");
 
                 entity.HasOne(d => d.Member)
                     .WithMany(p => p.Votes)
@@ -286,8 +321,15 @@ namespace api.Data
                 entity.HasOne(d => d.Song)
                     .WithMany(p => p.Votes)
                     .HasForeignKey(d => d.SongId)
+                    .IsRequired(false)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Vote_Song");
+
+                entity.HasOne(d => d.Album)
+                    .WithMany(p => p.Votes)
+                    .HasForeignKey(d => d.AlbumId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Vote_Album");
             });
 
             modelBuilder.Entity<Album>(entity =>
@@ -306,6 +348,10 @@ namespace api.Data
                 entity.Property(e => e.ArtDriveFileId)
                     .HasMaxLength(128)
                     .IsUnicode(false);
+
+                entity.Property(e => e.OrderLocked).HasDefaultValue(false);
+
+                entity.Property(e => e.ArtLocked).HasDefaultValue(false);
 
                 entity.Property(e => e.CreatedDate).HasColumnType("datetime");
 

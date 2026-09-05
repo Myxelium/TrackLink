@@ -1,6 +1,7 @@
 using api.Contracts;
 using api.Data;
 using api.Data.Entities;
+using api.Integrations.Google;
 using api.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,8 @@ public static class GetAlbum
 {
     public record Query(int AlbumId, int MemberId) : IRequest<AlbumActionResult<AlbumDetailDto>>;
 
-    public class Handler(DatabaseContext db) : IRequestHandler<Query, AlbumActionResult<AlbumDetailDto>>
+    public class Handler(DatabaseContext db, IGoogleDriveService googleDrive)
+        : IRequestHandler<Query, AlbumActionResult<AlbumDetailDto>>
     {
         public async Task<AlbumActionResult<AlbumDetailDto>> Handle(Query request, CancellationToken cancellationToken)
         {
@@ -27,7 +29,11 @@ public static class GetAlbum
                 return new AlbumActionResult<AlbumDetailDto>("not_in_band", null);
             }
 
-            var unsettled = false;
+            var unsettled = await AlbumArtStorage.ClearIfMissingAsync(
+                album,
+                googleDrive,
+                request.MemberId,
+                cancellationToken);
             foreach (var proposal in album.Proposals.Where(item =>
                          item.Status is AlbumProposalStatuses.Open or AlbumProposalStatuses.Rejected))
             {
@@ -48,7 +54,7 @@ public static class GetAlbum
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            return new AlbumActionResult<AlbumDetailDto>(null, AlbumDtoMapper.ToDetail(album, members));
+            return new AlbumActionResult<AlbumDetailDto>(null, AlbumDtoMapper.ToDetail(album, members, request.MemberId));
         }
     }
 }
@@ -61,6 +67,7 @@ public static class LoadAlbum
             .Include(album => album.Band)
             .Include(album => album.Tracks)
             .ThenInclude(track => track.Song)
+            .Include(album => album.Votes)
             .Include(album => album.Proposals)
             .ThenInclude(proposal => proposal.Song)
             .Include(album => album.Proposals)

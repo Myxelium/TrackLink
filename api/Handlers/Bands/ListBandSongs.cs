@@ -10,7 +10,7 @@ namespace api.Handlers.Bands;
 
 public static class ListBandSongs
 {
-    public record Query(int BandId, int? MemberId) : IRequest<IReadOnlyList<SongDto>?>;
+    public record Query(int BandId, int? MemberId, string? SearchQuery = null) : IRequest<IReadOnlyList<SongDto>?>;
 
     public class Handler(DatabaseContext db, IGoogleDriveService googleDrive)
         : IRequestHandler<Query, IReadOnlyList<SongDto>?>
@@ -36,7 +36,7 @@ public static class ListBandSongs
             var folderFileIds = await FolderFileIds(request.MemberId, band.DriveFolderId, cancellationToken);
 
             return songs
-                .Where(song => IsVisibleTake(song, folderFileIds))
+                .Where(song => IsVisibleTake(song, folderFileIds) && MatchesSearch(song, request.SearchQuery))
                 .Select(song => new SongDto(
                     song.Id,
                     song.Name,
@@ -73,6 +73,18 @@ public static class ListBandSongs
             {
                 return [];
             }
+        }
+
+        private static bool MatchesSearch(Song song, string? searchQuery)
+        {
+            if (string.IsNullOrWhiteSpace(searchQuery))
+            {
+                return true;
+            }
+
+            var needle = searchQuery.Trim();
+            return song.Name.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                || (song.Description?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         private static bool IsVisibleTake(Song song, HashSet<string>? folderFileIds)

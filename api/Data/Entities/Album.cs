@@ -10,6 +10,10 @@ public class Album
 
     public bool Archived { get; set; }
 
+    public bool OrderLocked { get; set; }
+
+    public bool ArtLocked { get; set; }
+
     public string ApprovalRule { get; set; } = "all";
 
     public string? ArtDriveFileId { get; set; }
@@ -25,4 +29,6 @@ public class Album
     public virtual ICollection<AlbumTrack> Tracks { get; set; } = new List<AlbumTrack>();
 
     public virtual ICollection<AlbumProposal> Proposals { get; set; } = new List<AlbumProposal>();
+
+    public virtual ICollection<Vote> Votes { get; set; } = new List<Vote>();
 }

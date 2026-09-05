@@ -46,6 +46,11 @@ namespace api.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(128)");
 
+                    b.Property<bool>("ArtLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("BandId")
                         .HasColumnType("int");
 
@@ -60,6 +65,11 @@ namespace api.Data.Migrations
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("OrderLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.HasKey("Id");
 
@@ -567,14 +577,56 @@ namespace api.Data.Migrations
                     b.Property<int>("MemberId")
                         .HasColumnType("int");
 
-                    b.Property<int>("SongId")
+                    b.Property<int?>("SongId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("AlbumId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Choice")
+                        .HasMaxLength(10)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.HasKey("Id", "MemberId", "SongId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Inclusion")
+                        .HasFilter("[Kind] = 'inclusion' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_AlbumName")
+                        .HasFilter("[Kind] = 'album_name'");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_SongName")
+                        .HasFilter("[Kind] = 'song_name' AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId", "SongId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Order")
+                        .HasFilter("[Kind] = 'order' AND [AlbumId] IS NOT NULL AND [SongId] IS NOT NULL");
+
+                    b.HasIndex("AlbumId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Vote_Art")
+                        .HasFilter("[Kind] = 'art' AND [AlbumId] IS NOT NULL");
 
                     b.HasIndex("MemberId");
 
@@ -712,6 +764,11 @@ namespace api.Data.Migrations
 
             modelBuilder.Entity("api.Data.Entities.Vote", b =>
                 {
+                    b.HasOne("api.Data.Entities.Album", "Album")
+                        .WithMany("Votes")
+                        .HasForeignKey("AlbumId")
+                        .HasConstraintName("FK_Vote_Album");
+
                     b.HasOne("api.Data.Entities.Member", "Member")
                         .WithMany("Votes")
                         .HasForeignKey("MemberId")
@@ -721,8 +778,9 @@ namespace api.Data.Migrations
                     b.HasOne("api.Data.Entities.Song", "Song")
                         .WithMany("Votes")
                         .HasForeignKey("SongId")
-                        .IsRequired()
                         .HasConstraintName("FK_Vote_Song");
+
+                    b.Navigation("Album");
 
                     b.Navigation("Member");
 
@@ -844,6 +902,8 @@ namespace api.Data.Migrations
                     b.Navigation("Proposals");
 
                     b.Navigation("Tracks");
+
+                    b.Navigation("Votes");
                 });
 
             modelBuilder.Entity("api.Data.Entities.AlbumProposal", b =>

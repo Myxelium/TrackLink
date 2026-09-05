@@ -108,13 +108,77 @@ public record AlbumSummaryDto(
     int TrackCount,
     int OpenProposalCount);
 
+public record InclusionTallyDto(
+    string? MyChoice,
+    int InCount,
+    int OutCount,
+    int AbstainCount);
+
+public record NameCandidateDto(
+    string Name,
+    int VoteCount,
+    bool IsMine);
+
+public record NameContestDto(
+    string? MyName,
+    IReadOnlyList<NameCandidateDto> Candidates);
+
+public record OrderTrackTallyDto(
+    int? MyRank,
+    double? AverageRank,
+    int? ConsensusPosition);
+
+public record OrderContestDto(
+    bool Locked,
+    int VoteCount,
+    IReadOnlyList<int>? MySongIds);
+
+public record ArtCandidateDto(
+    string DriveFileId,
+    int VoteCount,
+    bool IsMine);
+
+public record ArtContestDto(
+    bool Locked,
+    string? AppliedDriveFileId,
+    int VoteCount,
+    string? MyDriveFileId,
+    IReadOnlyList<ArtCandidateDto> Candidates);
+
 public record AlbumTrackDto(
     int Id,
     int SongId,
     string SongName,
     int? Version,
     int SortOrder,
-    DateTime AddedAt);
+    DateTime AddedAt,
+    InclusionTallyDto Inclusion,
+    NameContestDto Names,
+    OrderTrackTallyDto Order);
+
+public record OrderVoteRequest(IReadOnlyList<int> SongIds);
+
+public record OrderLockRequest(bool Locked);
+
+public record ArtVoteRequest(string DriveFileId);
+
+public record ArtLockRequest(bool Locked);
+
+public record AlbumArtUploadDto(
+    string DriveFileId,
+    string Name,
+    string? MimeType,
+    int? Width,
+    int? Height,
+    string? Warning);
+
+public record NameVoteRequest(
+    int? SongId,
+    string Name);
+
+public record InclusionVoteRequest(
+    int SongId,
+    string Choice);
 
 public record ProposalDecisionDto(
     int MemberId,
@@ -157,7 +221,10 @@ public record AlbumDetailDto(
     bool Archived,
     string ApprovalRule,
     IReadOnlyList<AlbumTrackDto> Tracks,
-    IReadOnlyList<AlbumProposalDto> Proposals);
+    IReadOnlyList<AlbumProposalDto> Proposals,
+    NameContestDto Names,
+    OrderContestDto Order,
+    ArtContestDto Art);
 
 public record CreateAlbumRequest(
     string Name,

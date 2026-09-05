@@ -65,7 +65,7 @@ public static class UpdateAlbum
             var refreshed = await LoadAlbum.ById(db, album.Id, cancellationToken);
             return new AlbumActionResult<AlbumDetailDto>(
                 null,
-                AlbumDtoMapper.ToDetail(refreshed!, members));
+                AlbumDtoMapper.ToDetail(refreshed!, members, request.MemberId));
         }
     }
 }

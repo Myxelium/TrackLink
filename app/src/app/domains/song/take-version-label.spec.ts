@@ -1,8 +1,5 @@
 import { Song } from '../../core/models';
-import {
-  takeSourceDateLabel,
-  takeVersionLabel
-} from './take-version-label';
+import { takeSourceDateLabel, takeVersionLabel } from './take-version-label';
 
 function sampleTake(fieldOverrides: Partial<Song>): Song {
   return {
@@ -25,7 +22,7 @@ describe('takeVersionLabel', () => {
     const secondTake = sampleTake({ id: 8, version: 2, previousVersion: 7 });
     const versionChain = takeVersionLabel(secondTake, [firstTake, secondTake]);
 
-    expect(versionChain).toBe('2 ← 1');
+    expect(versionChain).toBe('2 \u2190 1');
   });
 
   it('shows only the version when the prior take is missing', () => {

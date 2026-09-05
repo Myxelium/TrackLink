@@ -10,6 +10,70 @@ namespace api.Controllers;
 [Route("api/albums")]
 public class AlbumController(ISender mediator, IMemberSession memberSession) : ControllerBase
 {
+    [HttpGet("{albumId:int}/art")]
+    public async Task<IActionResult> Art(
+        int albumId,
+        [FromQuery] string? fileId,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new GetAlbumArt.Query(albumId, memberId.Value, fileId),
+            cancellationToken);
+        if (result.Error is null && result.Stream is not null && result.ContentType is not null)
+        {
+            return File(result.Stream, result.ContentType);
+        }
+
+        return NotFound();
+    }
+
+    [HttpPost("{albumId:int}/art")]
+    [RequestSizeLimit(AlbumArtPixels.MaxBytes + 65_536)]
+    [RequestFormLimits(MultipartBodyLengthLimit = AlbumArtPixels.MaxBytes + 65_536)]
+    public async Task<IActionResult> UploadArt(
+        int albumId,
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        if (file is null || file.Length <= 0)
+        {
+            return BadRequest(new { error = "Cover image is required" });
+        }
+
+        try
+        {
+            await using var content = file.OpenReadStream();
+            var result = await mediator.Send(
+                new UploadAlbumArt.Command(
+                    albumId,
+                    memberId.Value,
+                    file.FileName,
+                    file.ContentType,
+                    content,
+                    file.Length),
+                cancellationToken);
+            return AlbumHttp.From(result, created: true);
+        }
+        catch (Exception)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new { error = "Could not upload that image to the band Drive folder" });
+        }
+    }
+
     [HttpGet("{albumId:int}")]
     public async Task<IActionResult> Get(int albumId, CancellationToken cancellationToken)
     {
@@ -37,6 +101,114 @@ public class AlbumController(ISender mediator, IMemberSession memberSession) : C
 
         var result = await mediator.Send(
             new UpdateAlbum.Command(albumId, memberId.Value, body.Name, body.Archived, body.ApprovalRule),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/inclusion-votes")]
+    public async Task<IActionResult> CastInclusion(
+        int albumId,
+        [FromBody] InclusionVoteRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new CastInclusionVote.Command(albumId, memberId.Value, body.SongId, body.Choice),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/name-votes")]
+    public async Task<IActionResult> CastName(
+        int albumId,
+        [FromBody] NameVoteRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new CastNameVote.Command(albumId, memberId.Value, body.SongId, body.Name),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/order-votes")]
+    public async Task<IActionResult> CastOrder(
+        int albumId,
+        [FromBody] OrderVoteRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new CastOrderVote.Command(albumId, memberId.Value, body.SongIds),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/order-lock")]
+    public async Task<IActionResult> LockOrder(
+        int albumId,
+        [FromBody] OrderLockRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new LockAlbumOrder.Command(albumId, memberId.Value, body.Locked),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/art-votes")]
+    public async Task<IActionResult> CastArt(
+        int albumId,
+        [FromBody] ArtVoteRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new CastArtVote.Command(albumId, memberId.Value, body.DriveFileId),
+            cancellationToken);
+        return AlbumHttp.From(result);
+    }
+
+    [HttpPut("{albumId:int}/art-lock")]
+    public async Task<IActionResult> LockArt(
+        int albumId,
+        [FromBody] ArtLockRequest body,
+        CancellationToken cancellationToken)
+    {
+        var memberId = memberSession.GetMemberId(HttpContext);
+        if (memberId is null)
+        {
+            return Unauthorized(new { error = "Sign in with Google first" });
+        }
+
+        var result = await mediator.Send(
+            new LockAlbumArt.Command(albumId, memberId.Value, body.Locked),
             cancellationToken);
         return AlbumHttp.From(result);
     }
@@ -179,6 +351,21 @@ internal static class AlbumHttp
             },
             "archived" => new ConflictObjectResult(new { error = "That album is archived" }),
             "already_on_album" => new ConflictObjectResult(new { error = "That take is already on the album" }),
+            "not_on_album" => new ConflictObjectResult(new { error = "That take is not on this album" }),
+            "invalid_inclusion" => new BadRequestObjectResult(new { error = "Choice must be in, out, or abstain" }),
+            "invalid_title" => new BadRequestObjectResult(new { error = "Title must be 1 to 50 characters" }),
+            "invalid_order" => new BadRequestObjectResult(new { error = "Order must rank every admitted take once" }),
+            "order_locked" => new ConflictObjectResult(new { error = "The track order is locked" }),
+            "invalid_art" => new BadRequestObjectResult(new { error = "Cover art must be a Drive file id" }),
+            "not_image" => new BadRequestObjectResult(new { error = "Cover art must be an image in the band Drive folder" }),
+            "empty_file" => new BadRequestObjectResult(new { error = "Cover image is required" }),
+            "too_large" => new BadRequestObjectResult(new { error = "Cover image must be 10 MB or smaller" }),
+            "upload_failed" => new ConflictObjectResult(new { error = "Could not upload that image to the band Drive folder" }),
+            "needs_reauth" => new ObjectResult(new { error = "Sign in with Google again so TrackLink can write album art to Drive." })
+            {
+                StatusCode = StatusCodes.Status403Forbidden
+            },
+            "art_locked" => new ConflictObjectResult(new { error = "The album art is locked" }),
             "already_open" => new ConflictObjectResult(new { error = "That take already has an open proposal" }),
             "not_open" => new ConflictObjectResult(new { error = "That proposal is no longer open" }),
             "invalid_name" => new BadRequestObjectResult(new { error = "Album name is required" }),
