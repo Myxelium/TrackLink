@@ -1,0 +1,36 @@
+---
+description: Query graphify-out for cross-file / architecture questions after cheap bootstrap
+alwaysApply: false
+---
+
+# Graphify (opt-in, after bootstrap)
+
+Hand-written. Do **not** run `graphify cursor install` — that overwrites this file with `alwaysApply: true` and fights the token fence.
+
+## When to use
+
+After cheap bootstrap (`AGENTS.md`, handoff, `LESSONS-INDEX.md`, `CONTEXT.md`), if `graphify-out/graph.json` exists **and** the ask is architecture / cross-file / "where is X wired", prefer:
+
+```bash
+graphify query "…"
+graphify path "A" "B"
+graphify explain "Name"
+```
+
+over a repo-wide grep. Then open the few files the graph points at.
+
+See `agents-docs/GRAPHIFY.md`.
+
+## When not to use
+
+- Do **not** run Graphify before every Read/Grep.
+- Single-file bugs, copy edits, and known-path work stay on CONTEXT.md + scoped Read/Grep.
+- Graphify does **not** replace `CONTEXT.md` or `agents-docs/LESSONS.md`.
+- Default work scope is still `app/` + `api/` + CI + `agents-docs/` unless the user expands it.
+
+## Hard rules
+
+- Host-only CLI (`graphify`). Devcontainer does not ship Python/graphify.
+- Package is `graphifyy` (double y). Do not `pip install graphify`.
+- `graphify reflect` must **never** write over `agents-docs/LESSONS.md`. If you reflect, use `--out` somewhere else (or skip).
+- Do not vendor Graphify source, add a CI job, or install a repo git hook.

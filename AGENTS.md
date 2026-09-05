@@ -46,6 +46,7 @@ Search with path filters. Prefer `app/src/app/domains/<name>/` over repo-wide gr
 3. Open `agents-docs/LESSONS-INDEX.md` only — match tags; open matching bodies in `LESSONS.md`.
 4. Read `app/CONTEXT.md` for client work; `api/CONTEXT.md` for API work.
 5. Other docs **on demand** only.
+6. If `graphify-out/graph.json` exists and the ask is architecture / cross-file, query the graph **after** this bootstrap (`agents-docs/GRAPHIFY.md`). Graphify does not replace CONTEXT.md / LESSONS.
 
 **Models:** use the latest problem-solving model the user selected. Save tokens with **scope, handoffs, and short chats** — not by silently downgrading model quality.
 
