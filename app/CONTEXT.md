@@ -31,7 +31,7 @@ Owns the user-facing Angular studio: Google session, band song list, album desk,
 
 - Audio playback always goes through the API play endpoint so Range and Drive tokens stay on the server.
 - Do not read `localStorage` during SSR; gate with the browser platform.
-- Drive lists and links stay inside the owner-picked band folder.
+- Drive lists, links, and the Takes catalog stay inside the owner-picked band folder.
 
 ## Flagged ambiguities
 

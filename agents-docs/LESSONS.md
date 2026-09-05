@@ -4,6 +4,18 @@ Full lesson bodies. Session start reads `LESSONS-INDEX.md` and opens only matchi
 
 ## Lessons
 
+### Jasmine `toContain` can drop a unicode arrow
+
+`[app] [tests] [unicode]`
+
+`expect(text).toContain('2 ← 1')` failed even when the DOM had `2 ← 1`. Assert `\u2190` on the cell text, or compare a domain helper string.
+
+### Unsigned song list must not dump leftover Drive takes
+
+`[api] [songs] [drive]`
+
+`GET /api/bands/{id}/songs` is public for URL demos. After the folder sandbox, leftover `gdrive:` rows from the old full-Drive scan still sit in SQL. Hide Drive takes unless a signed-in member can confirm the file is inside the band folder. Do not delete the rows unless the user chooses unlink.
+
 ### Do not set `ProposalId` before the proposal row exists
 
 `[api] [albums] [ef]`

@@ -8,6 +8,8 @@ Tags help grepping: `rg '\\[api\\]' agents-docs/LESSONS-INDEX.md`
 
 ## Index
 
+- Jasmine `toContain` can drop a unicode arrow — `[app] [tests] [unicode]`
+- Unsigned song list must not dump leftover Drive takes — `[api] [songs] [drive]`
 - Do not set `ProposalId` before the proposal row exists — `[api] [albums] [ef]`
 - Do not `new` a component that uses `input()` — `[app] [angular] [tests]`
 - Seed members must not block album admission — `[api] [albums] [session]`

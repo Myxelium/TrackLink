@@ -158,12 +158,20 @@
             @for (song of bandSongs(); track song.id) {
               <button
                 (click)="playTheSong(song)"
+                [attr.title]="song.contentMd5 || null"
                 [class.is-armed]="playingId() === song.id"
                 class="sheet-row take-row"
                 type="button"
               >
-                <span class="take-name">{{ song.name }}</span>
-                <span class="mono">{{ song.version || 1 }}</span>
+                <span class="take-name">
+                  <span class="take-title">{{ song.name }}</span>
+
+                  @if (sourceDateLabel(song); as sourceDate) {
+                    <span class="take-date">{{ sourceDate }}</span>
+                  }
+                </span>
+
+                <span class="mono">{{ versionLabel(song) }}</span>
                 <span class="mono">{{ song.storageKind }}</span>
               </button>
             } @empty {

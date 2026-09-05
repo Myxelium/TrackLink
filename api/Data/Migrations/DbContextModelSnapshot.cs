@@ -506,6 +506,14 @@ namespace api.Data.Migrations
                     b.Property<int>("PreviousVersion")
                         .HasColumnType("int");
 
+                    b.Property<string>("ContentMd5")
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime?>("SourceModifiedAt")
+                        .HasColumnType("datetime");
+
                     b.Property<int>("UploadedBy")
                         .HasColumnType("int");
 

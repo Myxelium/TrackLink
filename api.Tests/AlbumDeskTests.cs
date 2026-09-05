@@ -314,6 +314,12 @@ public class AlbumDeskTests
             CancellationToken cancellationToken) =>
             Task.FromResult(true);
 
+        public Task<api.Contracts.DriveFileDto?> GetAudioFileAsync(
+            int memberId,
+            string fileId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<api.Contracts.DriveFileDto?>(null);
+
         public Task<api.Integrations.Google.DriveDownload?> DownloadAsync(
             int memberId,
             string fileId,

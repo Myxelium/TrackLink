@@ -31,6 +31,11 @@ public interface IGoogleDriveService
         string folderId,
         CancellationToken cancellationToken);
 
+    Task<DriveFileDto?> GetAudioFileAsync(
+        int memberId,
+        string fileId,
+        CancellationToken cancellationToken);
+
     Task<DriveDownload?> DownloadAsync(int memberId, string fileId, CancellationToken cancellationToken);
 }
 

@@ -40,7 +40,9 @@ public record SongDto(
     int UploadedBy,
     int? Version,
     int PreviousVersion,
-    string StorageKind);
+    string StorageKind,
+    string? ContentMd5,
+    DateTime? SourceModifiedAt);
 
 public record GoogleStatusDto(
     bool Configured,
@@ -52,7 +54,9 @@ public record GoogleStatusDto(
 public record DriveFileDto(
     string Id,
     string Name,
-    string? MimeType);
+    string? MimeType,
+    string? Md5 = null,
+    DateTime? ModifiedAt = null);
 
 public record AddDriveSongRequest(
     string DriveFileId,

@@ -11,6 +11,7 @@ import {
   ProposalReview,
   Song
 } from '../../core/models';
+import { takeVersionLabel } from '../../domains/song/take-version-label';
 
 @Component({
   selector: 'app-studio-album-work',
@@ -61,6 +62,10 @@ export class StudioAlbumWorkComponent {
     ]);
 
     return this.bandSongs().filter((song) => !takenIds.has(song.id));
+  }
+
+  versionLabel(listedTake: Song) {
+    return takeVersionLabel(listedTake, this.bandSongs());
   }
 
   waitingLabel(proposal: AlbumProposal) {

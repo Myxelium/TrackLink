@@ -85,6 +85,78 @@ describe('StudioPageComponent', () => {
     httpTestingController.verify();
   });
 
+  it('shows a version chain for a same-name Drive take', () => {
+    const componentFixture = TestBed.createComponent(StudioPageComponent);
+    const httpTestingController = TestBed.inject(HttpTestingController);
+
+    componentFixture.detectChanges();
+
+    httpTestingController.expectOne('/api/auth/me').flush({
+      configured: true,
+      signedIn: true,
+      connected: true,
+      email: 'ada@example.com',
+      member: {
+        id: 4,
+        userIdentifier: 'u',
+        username: 'ada',
+        fullname: 'Ada Vale',
+        image: null,
+        email: 'ada@example.com',
+        bands: [
+          {
+            id: 9,
+            name: 'Kindred',
+            genre: 'indie',
+            image: null,
+            driveFolderId: 'folder-root',
+            driveFolderName: 'Kindred takes',
+            myRole: 'owner',
+            isOwner: true
+          }
+        ],
+        roles: []
+      }
+    });
+
+    httpTestingController.expectOne('/api/bands/9/songs').flush([
+      {
+        id: 7,
+        name: 'bottleneck.mp3',
+        description: 'Linked from Google Drive',
+        uploadedBy: 4,
+        version: 1,
+        previousVersion: 0,
+        storageKind: 'gdrive',
+        contentMd5: 'abc123',
+        sourceModifiedAt: '2026-09-01T08:00:00Z'
+      },
+      {
+        id: 8,
+        name: 'bottleneck.mp3',
+        description: 'Linked from Google Drive',
+        uploadedBy: 4,
+        version: 2,
+        previousVersion: 7,
+        storageKind: 'gdrive',
+        contentMd5: 'def456',
+        sourceModifiedAt: '2026-09-05T08:00:00Z'
+      }
+    ]);
+
+    httpTestingController.expectOne('/api/bands/9/drive/files').flush([]);
+
+    componentFixture.detectChanges();
+
+    const renderedRoot = componentFixture.nativeElement as HTMLElement;
+
+    const versionCells = renderedRoot.querySelectorAll('.take-row .mono');
+
+    expect(Array.from(versionCells).some((cell) => cell.textContent?.includes('\u2190'))).toBeTrue();
+    expect(renderedRoot.textContent).toContain('2026-09-05');
+    httpTestingController.verify();
+  });
+
   it('links a Drive file with the session cookie and not X-Member-Id', () => {
     const componentFixture = TestBed.createComponent(StudioPageComponent);
     const pageComponent = componentFixture.componentInstance;
@@ -627,6 +699,93 @@ describe('StudioPageComponent', () => {
     expect(pageComponent.playingId()).toBe(4);
     expect(pageComponent.seekMs()).toBe(12500);
     expect(pageComponent.seekEpoch()).toBe(1);
+    httpTestingController.verify();
+  });
+
+  it('shows the Drive folder error when propose is rejected as outside the folder', () => {
+    const componentFixture = TestBed.createComponent(StudioPageComponent);
+    const pageComponent = componentFixture.componentInstance;
+    const httpTestingController = TestBed.inject(HttpTestingController);
+
+    componentFixture.detectChanges();
+
+    httpTestingController.expectOne('/api/auth/me').flush({
+      configured: true,
+      signedIn: true,
+      connected: true,
+      email: 'ada@example.com',
+      member: {
+        id: 4,
+        userIdentifier: 'u',
+        username: 'ada',
+        fullname: 'Ada Vale',
+        image: null,
+        email: 'ada@example.com',
+        bands: [
+          {
+            id: 9,
+            name: 'Kindred',
+            genre: 'indie',
+            image: null,
+            driveFolderId: 'folder-root',
+            driveFolderName: 'Kindred',
+            myRole: 'owner',
+            isOwner: true
+          }
+        ],
+        roles: []
+      }
+    });
+
+    httpTestingController.expectOne('/api/bands/9/songs').flush([]);
+    httpTestingController.expectOne('/api/bands/9/drive/files').flush([]);
+
+    pageComponent.showAlbumsPanel();
+    httpTestingController.expectOne('/api/bands/9/albums').flush([
+      {
+        id: 2,
+        bandId: 9,
+        name: 'First Light',
+        archived: false,
+        approvalRule: 'all',
+        trackCount: 0,
+        openProposalCount: 0
+      }
+    ]);
+
+    pageComponent.selectAlbum({
+      id: 2,
+      bandId: 9,
+      name: 'First Light',
+      archived: false,
+      approvalRule: 'all',
+      trackCount: 0,
+      openProposalCount: 0
+    });
+
+    httpTestingController.expectOne('/api/albums/2').flush({
+      id: 2,
+      bandId: 9,
+      name: 'First Light',
+      archived: false,
+      approvalRule: 'all',
+      tracks: [],
+      proposals: []
+    });
+
+    pageComponent.proposeSongId = 6;
+    pageComponent.proposeSong();
+
+    const proposeRequest = httpTestingController.expectOne('/api/albums/2/proposals');
+
+    expect(proposeRequest.request.body).toEqual({ songId: 6 });
+
+    proposeRequest.flush(
+      { error: 'File is outside the band Drive folder' },
+      { status: 404, statusText: 'Not Found' }
+    );
+
+    expect(pageComponent.loadError()).toBe('File is outside the band Drive folder');
     httpTestingController.verify();
   });
 });

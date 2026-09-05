@@ -233,6 +233,12 @@ namespace api.Data
 
                 entity.Property(e => e.Name).HasMaxLength(50);
 
+                entity.Property(e => e.ContentMd5)
+                    .HasMaxLength(32)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.SourceModifiedAt).HasColumnType("datetime");
+
                 entity.Property(e => e.Url)
                     .HasMaxLength(2000)
                     .HasColumnName("URL");

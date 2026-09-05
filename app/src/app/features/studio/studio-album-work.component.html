@@ -182,7 +182,7 @@
               <option [ngValue]="null">Choose a take</option>
 
               @for (song of proposeableSongs(); track song.id) {
-                <option [ngValue]="song.id">{{ song.name }}</option>
+                <option [ngValue]="song.id">{{ song.name }} · v{{ versionLabel(song) }}</option>
               }
             </select>
           </label>

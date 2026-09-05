@@ -1,5 +1,8 @@
 using api.Contracts;
 using api.Data;
+using api.Data.Entities;
+using api.Integrations.Google;
+using api.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,33 +10,85 @@ namespace api.Handlers.Bands;
 
 public static class ListBandSongs
 {
-    public record Query(int BandId) : IRequest<IReadOnlyList<SongDto>?>;
+    public record Query(int BandId, int? MemberId) : IRequest<IReadOnlyList<SongDto>?>;
 
-    public class Handler(DatabaseContext db) : IRequestHandler<Query, IReadOnlyList<SongDto>?>
+    public class Handler(DatabaseContext db, IGoogleDriveService googleDrive)
+        : IRequestHandler<Query, IReadOnlyList<SongDto>?>
     {
         public async Task<IReadOnlyList<SongDto>?> Handle(Query request, CancellationToken cancellationToken)
         {
-            var exists = await db.Bands.AnyAsync(b => b.Id == request.BandId, cancellationToken);
-            if (!exists)
+            var band = await db.Bands
+                .AsNoTracking()
+                .FirstOrDefaultAsync(catalog => catalog.Id == request.BandId, cancellationToken);
+            if (band is null)
             {
                 return null;
             }
 
-            return await db.SongIdentifiers
+            var songs = await db.SongIdentifiers
                 .AsNoTracking()
-                .Where(si => si.BandId == request.BandId)
-                .Select(si => si.Song)
-                .OrderBy(s => s.Name)
-                .ThenBy(s => s.Version)
-                .Select(s => new SongDto(
-                    s.Id,
-                    s.Name,
-                    s.Description,
-                    s.UploadedBy,
-                    s.Version,
-                    s.PreviousVersion,
-                    s.Url.StartsWith("gdrive:") ? "gdrive" : "url"))
+                .Where(identifier => identifier.BandId == request.BandId)
+                .Select(identifier => identifier.Song)
+                .OrderBy(song => song.Name)
+                .ThenBy(song => song.Version)
                 .ToListAsync(cancellationToken);
+
+            var folderFileIds = await FolderFileIds(request.MemberId, band.DriveFolderId, cancellationToken);
+
+            return songs
+                .Where(song => IsVisibleTake(song, folderFileIds))
+                .Select(song => new SongDto(
+                    song.Id,
+                    song.Name,
+                    song.Description,
+                    song.UploadedBy,
+                    song.Version,
+                    song.PreviousVersion,
+                    song.Url.StartsWith(AudioPlaybackService.DrivePrefix, StringComparison.OrdinalIgnoreCase)
+                        ? "gdrive"
+                        : "url",
+                    song.ContentMd5,
+                    song.SourceModifiedAt))
+                .ToList();
+        }
+
+        private async Task<HashSet<string>?> FolderFileIds(
+            int? memberId,
+            string? folderId,
+            CancellationToken cancellationToken)
+        {
+            if (memberId is null || string.IsNullOrWhiteSpace(folderId))
+            {
+                return null;
+            }
+
+            try
+            {
+                var files = await googleDrive.ListAudioFilesAsync(memberId.Value, folderId, cancellationToken);
+                return files
+                    .Select(file => file.Id)
+                    .ToHashSet(StringComparer.Ordinal);
+            }
+            catch (DriveFolderDeniedException)
+            {
+                return [];
+            }
+        }
+
+        private static bool IsVisibleTake(Song song, HashSet<string>? folderFileIds)
+        {
+            if (!song.Url.StartsWith(AudioPlaybackService.DrivePrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (folderFileIds is null)
+            {
+                return false;
+            }
+
+            var fileId = song.Url[AudioPlaybackService.DrivePrefix.Length..];
+            return folderFileIds.Contains(fileId);
         }
     }
 }

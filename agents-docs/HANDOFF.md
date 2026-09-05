@@ -6,59 +6,54 @@
 
 ## Goal
 
-Finish remaining musico board stories after the Google-session foundation. Album desk, timestamped reviews, and the master-detail Albums layout are in. Next: leftover Drive catalog, then votes, versions, search.
+Finish remaining musico board stories after the Google-session foundation. Leftover Drive catalog is hidden. Song versions are in. Next: search, then extra votes.
 
 ## Completed
 
 - Drive OAuth, Google = TrackLink session, folder sandbox, invites
-- Album catalogs + propose/approve (`all` / `owner_uploaders`)
-- Timestamped reviews (`startMs`/`endMs` + comment; click seeks transport)
-- Reviews allowed after approval so a solo owner can still comment
-- Solo-owner **Put on album** FK fix: admit via `Proposal` navigation, not `ProposalId = 0`
-- Albums layout **A**: slim list left, album/PR workspace right
+- Album catalogs + propose/approve + timestamped reviews
+- Albums layout A
+- Leftover Drive takes A (hide out-of-folder)
+- Song versions A: same Drive file id returns the existing take; same name + new file is next version (`PreviousVersion` = prior song id); Takes shows `2 ← 1` and Drive modified day; MD5 stored when Drive sends it
 
 ## Changed files
 
-- `api/` albums, proposals, reviews, migration `20260904194500_ProposalReviews`
-- `api.Tests/AlbumDeskTests.cs`
-- `app/src/app/features/studio/` album desk/work, deck seek, page layout
-- Feature docs: `albums.md`, `proposals.md`
+- `api/Handlers/Bands/AddBandDriveSong.cs`, `ListBandSongs.cs`
+- `api/Data/Migrations/20260905093200_SongVersionMeta.cs`
+- `api.Tests/AddBandDriveSongTests.cs`
+- `app/src/app/domains/song/take-version-label.ts`
+- `app/src/app/features/studio/` Takes + propose picker
+- Feature docs: `songs.md`
 
 ## Decisions
 
-- Any band member can comment; author or owner can delete
-- Mark start/end from the transport playhead (no waveform)
-- Approved proposals stay commentable; withdrawn does not
-- Layout A (not single-column or three-pane)
-- Stale Drive catalog A/B/C **not chosen**
+- Leftover Drive catalog A (hide, do not unlink)
+- Versions A (not search or extra votes)
+- `PreviousVersion` stays a prior song id, not a version number
+- Re-linking the same Drive file id is idempotent
 
 ## Failed approaches
 
-- `@else if (x(); as y)` is invalid Angular — nest `@if` in `@else`
-- `new Component()` with `input()` throws NG0203
-- `ProposalId = proposal.Id` before insert fails `FK_AlbumTrack_Proposal` (InMemory hides it)
-- Browser MCP often down in this environment
+- Browser MCP often down
+- Karma ChromeHeadless needs `--no-sandbox` on this host
+- Jasmine `toContain('2 ← 1')` can lose the arrow; assert `\u2190` instead
 
 ## Current issue
 
-Takes still lists Drive files from the old full-Drive scan. Propose of those can be `outside_folder`; the studio catch-all says “must already be on this band.” Votes, versions (date/MD5), and search are not built.
+Search and extra votes (name / art / order) are not built.
 
 ## Next steps
 
-1. Manual: Sign in on `:4200`, Albums rail — confirm slim list + workspace, Put on album, review seek
-2. Leftover Drive takes: **A** hide out-of-folder, **B** unlink, **C** fix error text only
-3. Votes, versions, search
+1. Manual: Sign in on `:4200`, link two Drive files with the same name — Takes should show `2 ← 1` and the Drive day
+2. Interview then build search or extra votes
 
 ## Commands
 
 ```bash
 export PATH="$HOME/.dotnet:$HOME/.local/bin:$PATH"
 export DOTNET_ROOT="$HOME/.dotnet"
-export NG_ALLOWED_HOSTS="localhost,127.0.0.1"
-
-curl -s http://localhost:5180/api/health
+curl -s http://localhost:5180/api/bands/1/songs
 # Sign in: http://localhost:4200/
-# Albums is the third studio rail button
 ```
 
 ## Local JunoLint (do not redo)

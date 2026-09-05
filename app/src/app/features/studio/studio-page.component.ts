@@ -16,6 +16,7 @@ import {
   catchError,
   tap
 } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TrackLinkApi } from '../../core/tracklink-api.service';
 import { SessionService } from '../../core/session.service';
 import { GoogleFolderPicker } from '../../core/google-folder-picker.service';
@@ -31,6 +32,7 @@ import {
   ProposalReview,
   Song
 } from '../../core/models';
+import { takeSourceDateLabel, takeVersionLabel } from '../../domains/song/take-version-label';
 
 @Component({
   selector: 'app-studio-page',
@@ -193,8 +195,15 @@ export class StudioPageComponent implements OnInit {
         this.openProposal.set(proposal.status === 'approved' ? null : proposal);
         this.loadAlbum(albumId);
       }),
-      catchError(() => {
-        this.loadError.set('Could not open that proposal. The take must already be on this band.');
+      catchError((proposeFailure: HttpErrorResponse) => {
+        const folderErrorText = proposeFailure.error?.error;
+
+        this.loadError.set(
+          typeof folderErrorText === 'string' && folderErrorText.length > 0
+            ? folderErrorText
+            : 'Could not open that proposal. The take must already be on this band.'
+        );
+
         return EMPTY;
       })
     )
@@ -379,6 +388,14 @@ export class StudioPageComponent implements OnInit {
     return takeCount === 1 ? '1 take' : `${takeCount} takes`;
   }
 
+  versionLabel(listedTake: Song) {
+    return takeVersionLabel(listedTake, this.bandSongs());
+  }
+
+  sourceDateLabel(listedTake: Song) {
+    return takeSourceDateLabel(listedTake);
+  }
+
   armedTakeLabel() {
     const armedTakeId = this.playingId();
     const armedTake = this.bandSongs().find((catalogSong) => catalogSong.id === armedTakeId);
@@ -443,7 +460,15 @@ export class StudioPageComponent implements OnInit {
 
     this.trackLinkApi.linkDriveSong(bandId, driveFile).pipe(
       tap((linkedSong) => {
-        this.bandSongs.update((currentSongs) => [...currentSongs, linkedSong]);
+        this.bandSongs.update((currentSongs) => {
+          if (currentSongs.some((catalogSong) => catalogSong.id === linkedSong.id)) {
+            return currentSongs.map((catalogSong) =>
+              catalogSong.id === linkedSong.id ? linkedSong : catalogSong);
+          }
+
+          return [...currentSongs, linkedSong];
+        });
+
         this.playTheSong(linkedSong);
       }),
       catchError(() => {

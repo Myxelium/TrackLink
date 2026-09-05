@@ -55,14 +55,39 @@ public static class AddBandDriveSong
                 songName = songName[..50];
             }
 
+            var pointer = $"{AudioPlaybackService.DrivePrefix}{request.DriveFileId}";
+            var catalog = await db.SongIdentifiers
+                .Where(identifier => identifier.BandId == request.BandId)
+                .Select(identifier => identifier.Song)
+                .ToListAsync(cancellationToken);
+
+            var alreadyLinked = catalog.FirstOrDefault(song =>
+                song.Url.Equals(pointer, StringComparison.OrdinalIgnoreCase));
+            if (alreadyLinked is not null)
+            {
+                return new AddDriveSongResult(null, ToDto(alreadyLinked));
+            }
+
+            var driveFile = await googleDrive.GetAudioFileAsync(
+                request.MemberId,
+                request.DriveFileId,
+                cancellationToken);
+            var priorTake = catalog
+                .Where(song => song.Name.Equals(songName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(song => song.Version ?? 0)
+                .ThenByDescending(song => song.Id)
+                .FirstOrDefault();
+
             var song = new Song
             {
                 Name = songName,
                 Description = "Linked from Google Drive",
                 UploadedBy = request.MemberId,
-                Version = 1,
-                PreviousVersion = 0,
-                Url = $"{AudioPlaybackService.DrivePrefix}{request.DriveFileId}"
+                Version = (priorTake?.Version ?? 0) + 1,
+                PreviousVersion = priorTake?.Id ?? 0,
+                ContentMd5 = NormalizeMd5(driveFile?.Md5),
+                SourceModifiedAt = driveFile?.ModifiedAt,
+                Url = pointer
             };
 
             db.Songs.Add(song);
@@ -75,14 +100,32 @@ public static class AddBandDriveSong
             });
             await db.SaveChangesAsync(cancellationToken);
 
-            return new AddDriveSongResult(null, new SongDto(
+            return new AddDriveSongResult(null, ToDto(song));
+        }
+
+        private static SongDto ToDto(Song song)
+        {
+            return new SongDto(
                 song.Id,
                 song.Name,
                 song.Description,
                 song.UploadedBy,
                 song.Version,
                 song.PreviousVersion,
-                "gdrive"));
+                "gdrive",
+                song.ContentMd5,
+                song.SourceModifiedAt);
+        }
+
+        private static string? NormalizeMd5(string? md5)
+        {
+            if (string.IsNullOrWhiteSpace(md5))
+            {
+                return null;
+            }
+
+            var trimmed = md5.Trim();
+            return trimmed.Length > 32 ? trimmed[..32] : trimmed;
         }
     }
 }

@@ -294,6 +294,42 @@ public class GoogleDriveService(
         return false;
     }
 
+    public async Task<DriveFileDto?> GetAudioFileAsync(
+        int memberId,
+        string fileId,
+        CancellationToken cancellationToken)
+    {
+        var service = await CreateDriveServiceAsync(memberId, cancellationToken);
+        if (service is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var request = service.Files.Get(fileId);
+            request.Fields = "id, name, mimeType, md5Checksum, modifiedTime";
+            request.SupportsAllDrives = true;
+            var file = await request.ExecuteAsync(cancellationToken);
+            if (file is null || string.IsNullOrWhiteSpace(file.Id))
+            {
+                return null;
+            }
+
+            return new DriveFileDto(
+                file.Id,
+                file.Name ?? "audio",
+                file.MimeType,
+                string.IsNullOrWhiteSpace(file.Md5Checksum) ? null : file.Md5Checksum,
+                file.ModifiedTimeDateTimeOffset?.UtcDateTime);
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation(ex, "Drive file metadata failed for {FileId}", fileId);
+            return null;
+        }
+    }
+
     public async Task<DriveDownload?> DownloadAsync(int memberId, string fileId, CancellationToken cancellationToken)
     {
         var service = await CreateDriveServiceAsync(memberId, cancellationToken);

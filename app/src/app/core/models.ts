@@ -43,6 +43,8 @@ export interface Song {
   version: number | null;
   previousVersion: number;
   storageKind: 'gdrive' | 'url' | string;
+  contentMd5?: string | null;
+  sourceModifiedAt?: string | null;
 }
 
 export interface GoogleStatus {

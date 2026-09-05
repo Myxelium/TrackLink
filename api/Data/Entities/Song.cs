@@ -14,6 +14,10 @@
 
         public int PreviousVersion { get; set; }
 
+        public string? ContentMd5 { get; set; }
+
+        public DateTime? SourceModifiedAt { get; set; }
+
         public string Url { get; set; } = null!;
 
         public virtual Member UploadedByNavigation { get; set; } = null!;

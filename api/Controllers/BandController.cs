@@ -45,7 +45,9 @@ public class BandController(ISender mediator, IMemberSession memberSession) : Co
     [HttpGet("{bandId:int}/songs")]
     public async Task<IActionResult> Songs(int bandId, CancellationToken cancellationToken)
     {
-        var songs = await mediator.Send(new ListBandSongs.Query(bandId), cancellationToken);
+        var songs = await mediator.Send(
+            new ListBandSongs.Query(bandId, memberSession.GetMemberId(HttpContext)),
+            cancellationToken);
         return songs is null ? NotFound() : Ok(songs);
     }
 
